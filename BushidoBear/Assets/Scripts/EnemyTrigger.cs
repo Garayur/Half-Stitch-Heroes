@@ -14,7 +14,7 @@ public class EnemyTrigger : MonoBehaviour
 	void OnDrawGizmos ()
 	{
 		Gizmos.color = Color.blue;
-		Gizmos.DrawCube (transform.position, Vector3.one);
+		Gizmos.DrawCube (transform.position, transform.localScale);
 
 		foreach (EnemySpawner e in spawners)
 		{
