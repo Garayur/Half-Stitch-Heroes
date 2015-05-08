@@ -3,6 +3,7 @@ using System.Collections;
 
 public class EnemySpawner : MonoBehaviour 
 {
+    bool isHighlighted = false;
 
     public void Spawn()
     {
@@ -13,5 +14,16 @@ public class EnemySpawner : MonoBehaviour
 	{
 		Gizmos.color = Color.red;
 		Gizmos.DrawSphere(transform.position, 0.2f);
+
+        if (isHighlighted)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, 0.4f);
+        }
 	}
+
+    internal void HighLight(bool b)
+    {
+        isHighlighted = b;
+    }
 }

@@ -4,10 +4,29 @@ using System.Collections.Generic;
 
 public class EnemyTrigger : MonoBehaviour 
 {
-	[SerializeField]
 	private List<EnemySpawner> spawners = new List<EnemySpawner>();
 
-	public GameObject Spawners { set{spawners.Add (value.GetComponent<EnemySpawner>());} }
+    //Properties
+    //========================================================================================
+    public GameObject Spawners { set { spawners.Add(value.GetComponent<EnemySpawner>()); } }
+
+    public string[] SpawnerNames
+    {
+        get
+        {
+            OrganizeSpawnList();
+
+            string[] temp = new string[spawners.Count];
+
+            for (int i = 0; i < temp.Length; i++)
+            {
+                temp[i] = spawners[i].gameObject.name;
+            }
+
+            return temp;
+        }
+    }
+    //========================================================================================
 
     void OnTriggerEnter()
     {
@@ -37,4 +56,50 @@ public class EnemyTrigger : MonoBehaviour
 			}
 		}
 	}
+
+    private void OrganizeSpawnList()
+    {
+        List<EnemySpawner> tempList = new List<EnemySpawner>();
+
+        foreach (EnemySpawner e in spawners)
+        {
+            if (e != null)
+            {
+                tempList.Add(e);
+            }
+        }
+
+        spawners = new List<EnemySpawner>();
+        spawners = tempList;
+    }
+
+    public void DestroyAllNodes()
+    {
+        foreach (EnemySpawner e in spawners)
+        {
+            if (e != null)
+            {
+                Object.DestroyImmediate(e.gameObject);
+            }
+        }
+    }
+
+    public GameObject GetNodeByIndex(int index)
+    {
+        OrganizeSpawnList();
+        GameObject[] temp = new GameObject[spawners.Count];
+
+        for (int i = 0; i < temp.Length; i++)
+        {
+            temp[i] = spawners[i].gameObject;
+        }
+
+        return temp[index];
+    }
+
+    public void HighlightSelectedNodeByIndex(int index , bool b)
+    {
+        OrganizeSpawnList();
+        spawners[index].HighLight(b);
+    }
 }
