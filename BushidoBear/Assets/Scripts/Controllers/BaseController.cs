@@ -7,7 +7,7 @@ public class BaseController : MonoBehaviour
     public float speed = 6f;                        // The speed that the player will move at.
     public float lightAttackDamage = 5f;
     public float heavyAttackDamage = 10f;
-    public float rotationSpeed = 100000f;
+    public float rotationSpeed = 10000f;
     public float jumpForce = 300f;
 
     protected GameObject damageTarget = null;

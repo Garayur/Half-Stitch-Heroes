@@ -17,7 +17,8 @@ public class PlayerOneController : BaseController
 
         Turning(h, v);
 
-        if (Input.GetButtonDown("JumpP1"))
+        //if (Input.GetButtonDown("JumpP1"))
+        if (Input.GetKeyDown(KeyCode.Joystick1Button0))
         {
             Jump();
         }
