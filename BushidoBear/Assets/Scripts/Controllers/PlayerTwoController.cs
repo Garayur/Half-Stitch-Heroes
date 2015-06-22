@@ -32,7 +32,7 @@ public class PlayerTwoController : BaseController
 
         Turning(h, v);
 
-        if (Input.GetKeyDown(KeyCode.Joystick1Button0))
+        if (Input.GetKeyDown(KeyCode.Joystick2Button0))
         {
             Jump();
         }
