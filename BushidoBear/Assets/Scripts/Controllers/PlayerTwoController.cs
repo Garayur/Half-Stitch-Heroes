@@ -7,12 +7,29 @@ public class PlayerTwoController : BaseController
 
     void Start()
     {
-        jumpRayLength = 0.3f;
+        actionList = new Action[1];
+
+        Action lightAttackCombo = new Action();
+        lightAttackCombo.m_name = "LightAttack";
+        lightAttackCombo.m_keyCode = KeyCode.Joystick2Button2;
+
+        actionList[0] = lightAttackCombo;
     }
 
     void Update()
     {
-        //this is for testing input listening
+        h = Input.GetAxisRaw("HorizontalP2");
+        v = Input.GetAxisRaw("VerticalP2");
+
+        if (Input.GetKeyDown(KeyCode.Joystick2Button0))
+        {
+            isJumping = true;
+        }
+        base.Update();
+    }
+}
+
+/*//this is for testing input listening
          for (int i = 0; i <=19; i++) 
          {
              if (Input.GetKeyDown("joystick 1 button " + i)) { Debug.Log("joystick 1"); }
@@ -23,23 +40,4 @@ public class PlayerTwoController : BaseController
              if (Input.GetKeyDown("joystick 6 button " + i)) { Debug.Log("joystick 6"); }
              if (Input.GetKeyDown("joystick 7 button " + i)) { Debug.Log("joystick 7"); }
              if (Input.GetKeyDown("joystick 8 button " + i)) { Debug.Log("joystick 8"); }
-         }
-
-        float h = Input.GetAxisRaw("HorizontalP2");
-        float v = Input.GetAxisRaw("VerticalP2");
-
-        Move(h, v);
-
-        Turning(h, v);
-
-        if (Input.GetKeyDown(KeyCode.Joystick2Button0))
-        {
-            Jump();
-        }
-    }
-
-    void OnDrawGizmos()
-    {
-        Gizmos.DrawLine(transform.position, transform.position - (Vector3.up * jumpRayLength));
-    }
-}
+         }*/

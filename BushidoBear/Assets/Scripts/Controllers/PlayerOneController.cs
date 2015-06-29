@@ -5,7 +5,7 @@ public class PlayerOneController : BaseController
 {
     void Start()
     {
-        jumpRayLength = 0.3f;
+        //jumpRayLength = 0.3f;
     }
 
 	void Update () 
@@ -13,18 +13,18 @@ public class PlayerOneController : BaseController
         float h = Input.GetAxisRaw("HorizontalP1");
         float v = Input.GetAxisRaw("VerticalP1");
 
-        Move(h, v);
+        //Move(h, v);
 
-        Turning(h, v);
+        //Turning(h, v);
 
         if (Input.GetKeyDown(KeyCode.Joystick1Button0))
         {
-            Jump();
+            //Jump();
         }
 	}
 
     void OnDrawGizmos()
     {
-        Gizmos.DrawLine(transform.position, transform.position - (Vector3.up * jumpRayLength));
+        //Gizmos.DrawLine(transform.position, transform.position - (Vector3.up * jumpRayLength));
     }
 }

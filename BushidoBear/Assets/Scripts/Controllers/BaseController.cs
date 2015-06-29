@@ -3,32 +3,265 @@ using System.Collections;
 
 public class BaseController : MonoBehaviour
 {
+    [System.Serializable]
+    public struct Action
+    {
+        public string m_name;		//Action Animation Name
+        public KeyCode m_keyCode;	//Input Keycode
+    };
+
+    //---------------
+    // public
+    //---------------
+
+    public bool enableControl = true;
+
+    public float turnSpeed = 10.0f;
+    public float moveSpeed = 2.0f;
+    public float runSpeedScale = 2.0f;
+
+    public Vector3 attackOffset = Vector3.zero;
+
+    public float attackRadius = 1.0f;
+    public float airTime = 0.0f;
     public float health = 100f;
-    public float speed = 6f;                        // The speed that the player will move at.
     public float lightAttackDamage = 5f;
     public float heavyAttackDamage = 10f;
-    public float rotationSpeed = 10000f;
-    public float jumpForce = 300f;
 
-    protected GameObject damageTarget = null;
-    protected Vector3 movement;                     // The vector to store the direction of the player's movement.
-    protected Animator anim;                        // Reference to the animator component.
-    protected Rigidbody playerRigidbody;
-    protected int floorMask;                        // A layer mask so that a ray can be cast just at gameobjects on the floor layer.
-    protected float jumpRayLength = 1.3f;           // The length of the ray checking if the player has Jumped
-    protected bool isNotJumping = true;
-    protected bool isPlayer;
+    public GameObject m_hitEffect = null;
+    public GameObject m_cameraTarget = null;
+
+    public string[] damageReaction;
+    public Action[] actionList;
+
+    //---------------
+    // private
+    //---------------
+    protected CharacterController charController = null;
+    protected Animator animator = null;
+    protected Vector3 moveDir = Vector3.zero;
+    protected bool isRun = false;
+    protected bool isJumping = false;
+    protected float moveSpeedScale = 1.0f;
+    protected float h, v;
 
     protected void Awake()
     {
-        floorMask = LayerMask.GetMask("Floor");
-
-        anim = GetComponent<Animator>();
-
-        playerRigidbody = GetComponent<Rigidbody>();
+        animator = GetComponent<Animator>();
+        charController = GetComponent<CharacterController>();
     }
 
-    protected void Move(float h, float v)
+    protected void Update()
+    {
+        //------------------
+        //Parameters Reset
+        //------------------
+        moveDir = Vector3.zero;
+
+
+        //------------------
+        //Update Control
+        //------------------
+        if (enableControl == true)
+        {
+            moveSpeedScale = animator.GetFloat("SpeedScale");
+            UpdateControl();
+        }
+
+        //------------------
+        //Parameters sync
+        //------------------
+        float speed = moveDir.magnitude;
+        if (isRun == true) speed *= runSpeedScale;
+
+        animator.SetFloat("Speed", speed, 0.05f, Time.deltaTime);
+        animator.SetBool("Ground", charController.isGrounded);
+        animator.SetFloat("AirTime", airTime);
+    }
+
+
+    protected void FixedUpdate()
+    {
+        airTime = animator.GetBool("Ground") ? 0.0f : airTime + Time.deltaTime;
+    }
+
+
+    private void UpdateControl()
+    {
+        UpdateMoveControl();
+        UpdateActionControl();
+    }
+
+
+    private void UpdateMoveControl()
+    {
+        Vector3 dir = Vector3.zero;
+        Vector3 move = Vector3.zero;
+
+        dir.x = h;
+        dir.z = v;
+
+        dir = Camera.main.transform.TransformDirection(dir);
+        dir.y = 0.0f;
+
+        dir = Vector3.ClampMagnitude(dir, 1.0f);
+
+        moveDir = dir;
+
+        //Run key check
+        isRun = true;
+
+        // run
+        if (isRun == true)
+        {
+            dir *= runSpeedScale;
+        }
+
+
+        // default gravity
+        move = Vector3.down * 0.5f * Time.deltaTime;
+
+
+        // turn
+        if (dir.magnitude > 0.01f)
+        {
+            transform.forward = Vector3.RotateTowards(transform.forward, dir, turnSpeed * Time.deltaTime, turnSpeed);
+            move += dir * Time.deltaTime * moveSpeed * moveSpeedScale;
+        }
+
+        // jump
+        if (isJumping && charController.isGrounded)
+        {
+            isJumping = false;
+            animator.SetTrigger("Jump");
+        }
+
+
+        // move
+        if (move != Vector3.zero)
+        {
+            charController.Move(move);
+        }
+
+    }
+
+
+    // Check Action Input
+    private void UpdateActionControl()
+    {
+        int actionValue = 0;
+
+        for (int i = 0; i < actionList.Length; i++)
+        {
+            if (Input.GetKey(actionList[i].m_keyCode) == true)
+            {
+                actionValue = i + 1;
+                break;
+            }
+        }
+
+        animator.SetInteger("Action", actionValue);
+    }
+
+
+
+    //Animation Events
+    void EventSkill(string skillName)
+    {
+        SendMessage(skillName, SendMessageOptions.DontRequireReceiver);
+    }
+
+
+    //Animation Events
+    void EventAttack()
+    {
+        Vector3 center = transform.TransformPoint(attackOffset);
+        float radius = attackRadius;
+
+
+        Debug.DrawRay(center, transform.forward, Color.red, 0.5f);
+
+        Collider[] cols = Physics.OverlapSphere(center, radius);
+
+
+        //------------------------
+        //Check Enemy Hit Collider
+        //------------------------
+        foreach (Collider col in cols)
+        {
+            BaseController charControl = col.GetComponent<BaseController>();
+            if (charControl == null)
+                continue;
+
+            if (charControl == this)
+                continue;
+
+            charControl.TakeDamage(this, center, transform.forward, 1.0f);
+        }
+    }
+
+
+    public void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount)
+    {
+        //-------------------------
+        // Please enter your code.
+        //
+        // - 
+        // - animation reaction
+        // - Direction
+        // ...
+        //-------------------------
+
+        if ((health -= amount) < 0)
+        {
+            Death();
+        }
+
+        //--------------------
+        // direction
+        if (other != null)
+        {
+            transform.forward = -other.transform.forward;
+        }
+        else
+        {
+            hitDirection.y = 0.0f;
+            transform.forward = -hitDirection.normalized;
+        }
+
+        //--------------------
+        // reaction  
+        string reaction = damageReaction[Random.Range(0, damageReaction.Length)];		// random damage animation test
+        animator.CrossFade(reaction, 0.1f, 0, 0.0f);
+
+
+        //--------------------
+        // hitFX 
+        GameObject.Instantiate(m_hitEffect, hitPosition, Quaternion.identity);
+    }
+
+    private void Death()
+    {
+        throw new System.NotImplementedException();
+    }
+
+
+    public string GetHelpText()
+    {
+        string text = "";
+
+        foreach (Action action in actionList)
+        {
+            text += action.m_keyCode.ToString() + " : " + action.m_name + "\n";
+        }
+
+        return text;
+    }
+
+    //old code that im still referencing. soon to be phased out.
+    //----------------------------------------------------------------------------
+
+    /*protected void Move(float h, float v)
     {
         bool isRunning = false;
 
@@ -112,5 +345,5 @@ public class BaseController : MonoBehaviour
     private void Death()
     {
 
-    }
+    }*/
 }
