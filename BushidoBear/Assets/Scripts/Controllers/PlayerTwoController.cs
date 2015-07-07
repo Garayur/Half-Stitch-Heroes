@@ -7,13 +7,13 @@ public class PlayerTwoController : BaseController
 
     void Start()
     {
-        actionList = new Action[1];
+        /*actionList = new Action[1];
 
         Action lightAttackCombo = new Action();
         lightAttackCombo.m_name = "LightAttack";
         lightAttackCombo.m_keyCode = KeyCode.Joystick2Button2;
 
-        actionList[0] = lightAttackCombo;
+        actionList[0] = lightAttackCombo;*/
     }
 
     void Update()
@@ -25,6 +25,12 @@ public class PlayerTwoController : BaseController
         {
             isJumping = true;
         }
+
+        if (Input.GetKey(KeyCode.Joystick2Button2))
+        {
+            LightAttack();
+        }
+
         base.Update();
     }
 }

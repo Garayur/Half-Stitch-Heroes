@@ -35,15 +35,20 @@ public class BaseController : MonoBehaviour
     public Action[] actionList;
 
     //---------------
-    // private
+    // protected
     //---------------
-    protected CharacterController charController = null;
-    protected Animator animator = null;
-    protected Vector3 moveDir = Vector3.zero;
     protected bool isRun = false;
     protected bool isJumping = false;
     protected float moveSpeedScale = 1.0f;
     protected float h, v;
+
+    //---------------
+    // private
+    //---------------
+    private CharacterController charController = null;
+    private Animator animator = null;
+    private Vector3 moveDir = Vector3.zero;
+    private int actionValue;
 
     protected void Awake()
     {
@@ -57,7 +62,6 @@ public class BaseController : MonoBehaviour
         //Parameters Reset
         //------------------
         moveDir = Vector3.zero;
-
 
         //------------------
         //Update Control
@@ -79,19 +83,17 @@ public class BaseController : MonoBehaviour
         animator.SetFloat("AirTime", airTime);
     }
 
-
     protected void FixedUpdate()
     {
         airTime = animator.GetBool("Ground") ? 0.0f : airTime + Time.deltaTime;
     }
 
-
     private void UpdateControl()
     {
         UpdateMoveControl();
         UpdateActionControl();
+        actionValue = 0;
     }
-
 
     private void UpdateMoveControl()
     {
@@ -101,7 +103,6 @@ public class BaseController : MonoBehaviour
         dir.x = h;
         dir.z = v;
 
-        dir = Camera.main.transform.TransformDirection(dir);
         dir.y = 0.0f;
 
         dir = Vector3.ClampMagnitude(dir, 1.0f);
@@ -145,11 +146,33 @@ public class BaseController : MonoBehaviour
 
     }
 
+    protected void LightAttack()
+    {
+        actionValue = 1;
+    }
+
+    protected void HeavyAttack()
+    {
+        actionValue = 2;
+    }
+
+    private void ComboStateMachine (int attackType)
+    {
+        switch (actionValue)
+        {
+            case 1:
+                break;
+            case 2:
+                break;
+            default:
+                break;
+        }
+    }
 
     // Check Action Input
     private void UpdateActionControl()
     {
-        int actionValue = 0;
+        /*int actionValue = 0;
 
         for (int i = 0; i < actionList.Length; i++)
         {
@@ -158,26 +181,22 @@ public class BaseController : MonoBehaviour
                 actionValue = i + 1;
                 break;
             }
-        }
+        }*/
 
         animator.SetInteger("Action", actionValue);
     }
 
-
-
     //Animation Events
-    void EventSkill(string skillName)
+    private void EventSkill(string skillName)
     {
         SendMessage(skillName, SendMessageOptions.DontRequireReceiver);
     }
 
-
     //Animation Events
-    void EventAttack()
+    private void EventAttack()
     {
         Vector3 center = transform.TransformPoint(attackOffset);
         float radius = attackRadius;
-
 
         Debug.DrawRay(center, transform.forward, Color.red, 0.5f);
 
@@ -199,7 +218,6 @@ public class BaseController : MonoBehaviour
             charControl.TakeDamage(this, center, transform.forward, 1.0f);
         }
     }
-
 
     public void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount)
     {
@@ -244,7 +262,6 @@ public class BaseController : MonoBehaviour
     {
         throw new System.NotImplementedException();
     }
-
 
     public string GetHelpText()
     {
