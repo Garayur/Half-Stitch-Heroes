@@ -23,7 +23,7 @@ public class AIBaseController : BaseController {
 		isRun = true;
 	}
 	
-	protected override void Update () {
+	protected void Update () {
 		base.Update();
 		switch (currentState) {
 		case AIState.StartingAnimation:
