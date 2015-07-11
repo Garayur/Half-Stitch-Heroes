@@ -8,12 +8,6 @@ public class AICoordinator : MonoBehaviour {
 	Dictionary<GameObject, List<AIBaseController>> aiTargetAssignments = new Dictionary<GameObject, List<AIBaseController>>();
 	
 
-	protected void Start(){
-		FindPlayers();
-		AssignAttackers();
-
-	}
-
 	protected void OnEnable() {
 		AIBaseController.OnAIStateChange += CheckSquadAssignments;
 	}
@@ -22,8 +16,14 @@ public class AICoordinator : MonoBehaviour {
 		AIBaseController.OnAIStateChange -= CheckSquadAssignments;
 	}
 
-	protected void Update() {
+	void OnTriggerEnter(Collider other){
+		BeginCombat();
+	}
 
+
+	protected virtual void BeginCombat() {
+		FindPlayers();
+		AssignAttackers();
 	}
 
 	protected virtual void FindPlayers() {
@@ -39,7 +39,6 @@ public class AICoordinator : MonoBehaviour {
 	}
 
 	protected void AssignAIToTarget(GameObject target) {
-
 		AIBaseController closestAIToTarget = null;
 		float closestDistanceToTarget = 1000f;
 		float temporaryDistanceToTarget;
@@ -56,6 +55,7 @@ public class AICoordinator : MonoBehaviour {
 		}
 		if(closestAIToTarget != null) {
 			aiTargetAssignments[target].Add(closestAIToTarget);
+			closestAIToTarget.AttackNewTarget(target);
 		}
 
 	}
@@ -67,13 +67,47 @@ public class AICoordinator : MonoBehaviour {
 		}
 	}
 
+	protected void ReassignAI(AIBaseController ai, GameObject target) {
+		if(target != null) {
+			aiTargetAssignments[target].Remove(ai);
+			AssignAIToTarget(target);
+		}
+	}
+
+	protected void AlertSquad(){
+		foreach (AIBaseController ai in AISquad) {
+			ai.StartCombatPositioning();
+		}
+	}
+
 	protected void CheckSquadAssignments(AIStateData aiState) {
-		if(aiState.state != AIState.Combat)
-			aiTargetAssignments[aiState.target].Remove(aiState.owner);
+		if(AISquad.Contains(aiState.owner)) {
 
-		AssignAIToTarget(aiState.target);
+			switch (aiState.state) {
+			case AIState.StartingAnimation:
+				AlertSquad();
+				break;
+			case AIState.Positioning:
+				ReassignAI(aiState.owner, aiState.target);
+				break;
+			case AIState.Attacking:
+				break;
+			case AIState.Flinching:
+				ReassignAI(aiState.owner, aiState.target);
+				break;
+			case AIState.Fallen:
+				ReassignAI(aiState.owner, aiState.target);
+				break;
+			case AIState.Dying:
+				ReassignAI(aiState.owner, aiState.target);
+				break;
+			case AIState.Dead:
+				AISquad.Remove(aiState.owner);
+				DestroySelfOnSquadDeath();
+				break;
+			}
 
-		DestroySelfOnSquadDeath();
+		}
 	}
 	
 }

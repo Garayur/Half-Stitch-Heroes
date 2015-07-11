@@ -1,17 +1,20 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public enum AIState {StartingAnimation, Positioning, Combat, Flinching, Fallen, Dying};
+public enum AIState {StartingAnimation, Positioning, Attacking, Flinching, Fallen, Dying, Dead};
 
 public class AIBaseController : BaseController {
+
+	public float flinchDuration = 1.0f;
+	public float attackFrequency = 2.0f;
+	public float maxAttackRange = 3;
+	public float minAttackRange = 2;
 	
 	private AIState currentState;
-	private float timer;
-	public GameObject target = null;
+	private float stateTimer;
+	private GameObject target = null;
 	private Vector3 vectorToTarget;
 	private Vector3 normalizedVectorToTarget;
-	private float maxAttackRange = 3;
-	private float minAttackRange = 2;
 	private float distanceToTarget;
 	
 	
@@ -19,12 +22,11 @@ public class AIBaseController : BaseController {
 	public static event AIStateChanged OnAIStateChange;
 	
 	void Start () {
-		currentState = AIState.StartingAnimation;
+		currentState = AIState.Positioning;
 		isRun = true;
 	}
 	
 	protected void Update () {
-		base.Update();
 		switch (currentState) {
 		case AIState.StartingAnimation:
 			StartAnimation();
@@ -32,8 +34,8 @@ public class AIBaseController : BaseController {
 		case AIState.Positioning:
 			Positioning();
 			break;
-		case AIState.Combat:
-			Combat ();
+		case AIState.Attacking:
+			Attacking ();
 			break;
 		case AIState.Flinching:
 			Flinch();
@@ -44,37 +46,61 @@ public class AIBaseController : BaseController {
 		case AIState.Dying:
 			Dying();
 			break;
+		case AIState.Dead:
+			Dead();
+			break;
 		}
-		
+		base.Update();
 	}
 	
 	
 	protected virtual void StartAnimation() {
-		//enemy actions if already on screen when player reaches AI
-		
 		currentState = AIState.Positioning;
-
-		if(OnAIStateChange != null)
-			OnAIStateChange(new AIStateData(currentState, this, target));
+		SendStateChangeEvent();
 	}
 	
 	protected virtual void Positioning() {
 		//moving around the screen when AI has entered combat
-		currentState = AIState.Combat;
 
-		if(OnAIStateChange != null)
-			OnAIStateChange(new AIStateData(currentState, this, target));
 	}
 	
-	protected virtual void Combat() {
+	protected virtual void Attacking() {
 		vectorToTarget = target.transform.position - gameObject.transform.position;
 		distanceToTarget = Vector3.Distance(gameObject.transform.position, target.transform.position);
 		
 		if (ApproachedTargetUntilInRange()) {
-			//attack
+			stateTimer -= Time.deltaTime;
+			if(stateTimer <= 0) {
+				LightAttack();
+				stateTimer = attackFrequency;
+			}
 		}
 	}
 	
+	protected virtual void Flinch() {
+		stateTimer -= Time.deltaTime;
+		if(stateTimer <= 0) {
+			currentState = AIState.Positioning;
+			SendStateChangeEvent();
+		}
+	}
+	
+	protected virtual void Fall() {
+		//has fallen to the ground will get up again notify aicoordinator
+
+		SendStateChangeEvent();
+	}
+	
+	protected virtual void Dying() {
+		//playing dying animations
+
+		SendStateChangeEvent();
+	}
+
+	protected virtual void Dead() {
+		Destroy(this);
+	}
+
 	protected virtual bool ApproachedTargetUntilInRange() {
 		normalizedVectorToTarget = Vector3.Normalize(vectorToTarget);
 		
@@ -101,30 +127,47 @@ public class AIBaseController : BaseController {
 		else
 			return false;
 	}
-	
-	protected virtual void Flinch(){
-		//has flinched notify aicoordinator
-	}
-	
-	protected virtual void Fall() {
-		//has fallen to the ground will get up again notify aicoordinator
-	}
-	
-	protected virtual void Dying() {
-		//has died, play any dying animations at the end of this remove this character from screen notify aicontroller
-	}
-	
-	public virtual void AssignTarget(GameObject newTarget) {
+
+	public virtual void AttackNewTarget(GameObject newTarget) {
 		target = newTarget;
-		currentState = AIState.Combat;
+		currentState = AIState.Attacking;
+		SendStateChangeEvent();
 	}
 	
 	public virtual bool IsAvailable() {
-		if(currentState == AIState.Positioning)
-			return true;
-		else
+		if(currentState == AIState.Positioning || currentState == AIState.StartingAnimation) {
+			return true; }
+		else 
 			return false;
+
 	}
+
+	protected void SendStateChangeEvent() {
+		if(OnAIStateChange != null)
+			OnAIStateChange(new AIStateData(currentState, this, target));
+	}
+
+	public void StartCombatPositioning(){
+		if(currentState == AIState.StartingAnimation) {
+			currentState = AIState.Positioning;
+			SendStateChangeEvent();
+		}
+	}
+
+	public void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
+		base.TakeDamage(other, hitPosition, hitDirection, amount);
+		if(currentState == AIState.StartingAnimation) {
+			currentState = AIState.Positioning;
+			SendStateChangeEvent();
+		}
+		else if(currentState == AIState.Attacking) {
+			currentState = AIState.Flinching;
+			stateTimer = flinchDuration;
+			SendStateChangeEvent();
+		}
+	}
+
+
 	
-	
+
 }
