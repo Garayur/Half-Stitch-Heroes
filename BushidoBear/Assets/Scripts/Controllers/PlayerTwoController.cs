@@ -21,6 +21,8 @@ public class PlayerTwoController : BaseController
         h = Input.GetAxisRaw("HorizontalP2");
         v = Input.GetAxisRaw("VerticalP2");
 
+        
+
         if (Input.GetKeyDown(KeyCode.Joystick2Button0))
         {
             isJumping = true;
@@ -37,6 +39,9 @@ public class PlayerTwoController : BaseController
         }
 
         base.Update();
+        
+        UpdateTurning();
+        UpdateMovement();
     }
 }
 

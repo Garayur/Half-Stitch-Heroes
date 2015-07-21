@@ -119,6 +119,7 @@ public class BaseController : MonoBehaviour
         if (move != Vector3.zero)
         {
             charController.Move(move);
+            move = Vector3.zero;
         }
     }
 
@@ -136,7 +137,7 @@ public class BaseController : MonoBehaviour
     private void UpdateMoveControl()
     {
         dir = Vector3.zero;
-        move = Vector3.zero;
+        
 
         dir.x = h;
         dir.z = v;
