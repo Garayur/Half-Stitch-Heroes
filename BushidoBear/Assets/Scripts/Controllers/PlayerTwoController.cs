@@ -16,7 +16,7 @@ public class PlayerTwoController : BaseController
         actionList[0] = lightAttackCombo;*/
     }
 
-    void Update()
+    override protected void Update()
     {
         h = Input.GetAxisRaw("HorizontalP2");
         v = Input.GetAxisRaw("VerticalP2");
@@ -26,9 +26,14 @@ public class PlayerTwoController : BaseController
             isJumping = true;
         }
 
-        if (Input.GetKey(KeyCode.Joystick2Button2))
+        if (Input.GetKeyDown(KeyCode.Joystick2Button2))
         {
             LightAttack();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Joystick2Button3))
+        {
+            HeavyAttack();
         }
 
         base.Update();

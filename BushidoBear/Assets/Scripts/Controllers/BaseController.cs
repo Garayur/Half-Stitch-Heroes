@@ -1,14 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
+
+public enum Action
+{
+    LIGHTATTACK,
+    HEAVYATTACK
+};
 
 public class BaseController : MonoBehaviour
 {
-    [System.Serializable]
+    /*[System.Serializable]
     public struct Action
     {
         public string m_name;		//Action Animation Name
         public KeyCode m_keyCode;	//Input Keycode
-    };
+    };*/
 
     //---------------
     // public
@@ -48,15 +55,26 @@ public class BaseController : MonoBehaviour
     private CharacterController charController = null;
     private Animator animator = null;
     private Vector3 moveDir = Vector3.zero;
+    private Vector3 dir = Vector3.zero;
+    private Vector3 move = Vector3.zero;
     private int actionValue;
+    private ComboStateMachine currentState;
+    private ComboStateMachine startState;
+    private List<ComboStateMachine> states;
 
     protected void Awake()
     {
+        //for testing purposes
+        states = new TestControllerState().SetUp(this);
+        startState = states[0];
+        startState.SetUp(this);
+        currentState = startState;
+
         animator = GetComponent<Animator>();
         charController = GetComponent<CharacterController>();
     }
 
-    protected void Update()
+    protected virtual void Update()
     {
         //------------------
         //Parameters Reset
@@ -83,7 +101,7 @@ public class BaseController : MonoBehaviour
         animator.SetFloat("AirTime", airTime);
     }
 
-    protected void FixedUpdate()
+    protected virtual void FixedUpdate()
     {
         airTime = animator.GetBool("Ground") ? 0.0f : airTime + Time.deltaTime;
     }
@@ -95,10 +113,30 @@ public class BaseController : MonoBehaviour
         actionValue = 0;
     }
 
+    public void UpdateMovement()
+    {
+        // move
+        if (move != Vector3.zero)
+        {
+            charController.Move(move);
+        }
+    }
+
+    public void UpdateTurning()
+    {
+        // turn
+        // make seperate from movement
+        if (dir.magnitude > 0.01f)
+        {
+            transform.forward = Vector3.RotateTowards(transform.forward, dir, turnSpeed * Time.deltaTime, turnSpeed);
+            move += dir * Time.deltaTime * moveSpeed * moveSpeedScale;
+        }
+    }
+
     private void UpdateMoveControl()
     {
-        Vector3 dir = Vector3.zero;
-        Vector3 move = Vector3.zero;
+        dir = Vector3.zero;
+        move = Vector3.zero;
 
         dir.x = h;
         dir.z = v;
@@ -122,51 +160,73 @@ public class BaseController : MonoBehaviour
         // default gravity
         move = Vector3.down * 0.5f * Time.deltaTime;
 
-
-        // turn
-        if (dir.magnitude > 0.01f)
-        {
-            transform.forward = Vector3.RotateTowards(transform.forward, dir, turnSpeed * Time.deltaTime, turnSpeed);
-            move += dir * Time.deltaTime * moveSpeed * moveSpeedScale;
-        }
-
         // jump
         if (isJumping && charController.isGrounded)
         {
             isJumping = false;
             animator.SetTrigger("Jump");
         }
-
-
-        // move
-        if (move != Vector3.zero)
-        {
-            charController.Move(move);
-        }
-
     }
 
     protected void LightAttack()
     {
-        actionValue = 1;
+        currentState.onInput(Action.LIGHTATTACK);
     }
 
     protected void HeavyAttack()
     {
-        actionValue = 2;
+        currentState.onInput(Action.HEAVYATTACK);
     }
 
-    private void ComboStateMachine (int attackType)
+    internal void setState(ComboStateMachine state)
     {
-        switch (actionValue)
+        switch (state.moveNumber)
         {
+            case 0:
+                //animator.SetInteger("Action", 0);
+                actionValue = 0;
+                print("idle");
+                break;
             case 1:
+                //animator.SetInteger("Action", 1);
+                actionValue = 1;
+                print("light hit 1");
                 break;
             case 2:
+                actionValue = 4;
+                print("Heavy Hit");
+                //animator.SetInteger("Action", 4);
+                break;
+            case 3:
+                actionValue = 2;
+                print("Combo 2");
+                //animator.SetInteger("Action", 2);
+                break;
+            case 4:
+                actionValue = 2;
+                print("Combo2");
+                //animator.SetInteger("Action", 2);
+                break;
+            case 5:
+                actionValue = 3;
+                print("light hit 3");
+                //animator.SetInteger("Action", 3);
+                break;
+            case 6:
+                actionValue = 4;
+                print("finale");
+                //animator.SetInteger("Action", 4);
+                break;
+            case 7:
+                actionValue = 4;
+                print("finale");
+                //animator.SetInteger("Action", 4);
                 break;
             default:
                 break;
         }
+
+        currentState = state;
     }
 
     // Check Action Input
@@ -182,6 +242,11 @@ public class BaseController : MonoBehaviour
                 break;
             }
         }*/
+        if (ComboStateMachine.timer != null && ComboStateMachine.timer.Elapsed.Seconds > .5f)
+        {
+            currentState = startState;
+            actionValue = 0;
+        }
 
         animator.SetInteger("Action", actionValue);
     }
@@ -219,7 +284,7 @@ public class BaseController : MonoBehaviour
         }
     }
 
-    public void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount)
+    public virtual void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount)
     {
         //-------------------------
         // Please enter your code.
@@ -258,21 +323,9 @@ public class BaseController : MonoBehaviour
         GameObject.Instantiate(m_hitEffect, hitPosition, Quaternion.identity);
     }
 
-    private void Death()
+    protected virtual void Death()
     {
         throw new System.NotImplementedException();
-    }
-
-    public string GetHelpText()
-    {
-        string text = "";
-
-        foreach (Action action in actionList)
-        {
-            text += action.m_keyCode.ToString() + " : " + action.m_name + "\n";
-        }
-
-        return text;
     }
 
     //old code that im still referencing. soon to be phased out.
