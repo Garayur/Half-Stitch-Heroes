@@ -10,19 +10,20 @@ public class AIBaseController : BaseController {
 	public float maxAttackRange = 3;
 	public float minAttackRange = 2;
 	
-	private AIState currentState;
-	private float stateTimer;
-	private GameObject target = null;
-	private Vector3 vectorToTarget;
-	private Vector3 normalizedVectorToTarget;
-	private float distanceToTarget;
+	protected AIState currentState;
+	protected float stateTimer;
+	protected GameObject target = null;
+	protected Vector3 vectorToTarget;
+	protected Vector3 normalizedVectorToTarget;
+	protected float distanceToTarget;
+	protected Vector3 movementVector;
 	
 	
 	public delegate void AIStateChanged(AIStateData newState);
 	public static event AIStateChanged OnAIStateChange;
 	
 	void Start () {
-		currentState = AIState.Positioning;
+		currentState = AIState.StartingAnimation;
 		isRun = true;
 	}
 	
@@ -35,7 +36,7 @@ public class AIBaseController : BaseController {
 			Positioning();
 			break;
 		case AIState.Attacking:
-			Attacking ();
+			Attacking();
 			break;
 		case AIState.Flinching:
 			Flinch();
@@ -51,16 +52,18 @@ public class AIBaseController : BaseController {
 			break;
 		}
 		base.Update();
+		UpdateTurning();
+		UpdateMovement();
 	}
 	
 	
 	protected virtual void StartAnimation() {
-		currentState = AIState.Positioning;
-		SendStateChangeEvent();
+
 	}
 	
 	protected virtual void Positioning() {
-		//moving around the screen when AI has entered combat
+		h = movementVector.x;
+		v = movementVector.z;
 
 	}
 	
@@ -165,6 +168,10 @@ public class AIBaseController : BaseController {
 			stateTimer = flinchDuration;
 			SendStateChangeEvent();
 		}
+	}
+
+	public void AssignMovementVector(Vector3 newMovementVector) {
+		movementVector = newMovementVector;
 	}
 
 

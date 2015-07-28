@@ -6,7 +6,14 @@ public class AICoordinator : MonoBehaviour {
 
 	public List<AIBaseController> AISquad;
 	Dictionary<GameObject, List<AIBaseController>> aiTargetAssignments = new Dictionary<GameObject, List<AIBaseController>>();
-	
+
+	public float avoidanceDistance = 10;
+	public float maxDistance = 10;
+	protected float movementUpdateInterval = 0.35f;
+	protected float timer = 0.25f;
+	protected bool alertTriggered = false;
+
+	public int xmin, xmax, zmin, zmax;
 
 	protected void OnEnable() {
 		AIBaseController.OnAIStateChange += CheckSquadAssignments;
@@ -20,9 +27,24 @@ public class AICoordinator : MonoBehaviour {
 		BeginCombat();
 	}
 
+	void Start() {
+		timer = movementUpdateInterval;
+	}
+
+	void Update() {
+		if(alertTriggered) {
+			timer -= Time.deltaTime;
+			if(timer <= 0) {
+				AssignNormalizedMovementVector();
+				timer = movementUpdateInterval;
+			}
+		}
+	}
+
 
 	protected virtual void BeginCombat() {
 		FindPlayers();
+		AlertSquad();
 		AssignAttackers();
 	}
 
@@ -78,6 +100,8 @@ public class AICoordinator : MonoBehaviour {
 		foreach (AIBaseController ai in AISquad) {
 			ai.StartCombatPositioning();
 		}
+
+		alertTriggered = true;
 	}
 
 	protected void CheckSquadAssignments(AIStateData aiState) {
@@ -109,5 +133,78 @@ public class AICoordinator : MonoBehaviour {
 
 		}
 	}
-	
+
+	protected void AssignNormalizedMovementVector(){
+		Vector3 centroid, movementVector;
+
+		centroid = CalculateCentroid();
+
+		foreach(AIBaseController ai in AISquad){
+			if(ai.IsAvailable()) {
+				movementVector = CalculateMovementVector(centroid, CalculateRepulsion(ai.gameObject), ai.gameObject);
+				ai.AssignMovementVector(movementVector);
+			}
+		}
+
+	}
+
+	protected Vector3 CalculateCentroid() {
+		Vector3 centroid = Vector3.zero;
+		int count = 0;
+
+		foreach (AIBaseController ai in AISquad) {
+			if(ai.IsAvailable()) {
+				centroid += ai.gameObject.transform.position;
+				count++;
+			}
+		}
+
+		foreach (GameObject player in aiTargetAssignments.Keys ) {
+			centroid += player.transform.position;
+			count++;
+		}
+
+		centroid.x = centroid.x / count;
+		centroid.y = 0;
+		centroid.z = centroid.z / count;
+
+		return centroid;
+	}
+
+	protected Vector3 CalculateRepulsion(GameObject primary) {
+		Vector3 repulsion = Vector3.zero;
+
+		foreach (AIBaseController ai in AISquad) {
+			if(ai.gameObject != primary) {
+				if(TooClose(primary, ai.gameObject)) {
+					repulsion += primary.transform.position - ai.gameObject.transform.position;
+				}
+			}
+		}
+
+		return repulsion;
+
+	}
+
+	protected Vector3 CalculateMovementVector(Vector3 centroid, Vector3 repulsion, GameObject primary) {
+		Vector3 movementVector = Vector3.zero;
+
+		if(Vector3.Distance(centroid, primary.transform.position) > maxDistance) {
+			movementVector += centroid - primary.transform.position;
+		}
+
+		movementVector += repulsion;
+
+		return Vector3.Normalize(movementVector);
+	}
+
+
+	protected bool TooClose(GameObject primary, GameObject secondary){
+		if(Vector3.Distance(primary.transform.position, secondary.transform.position) > avoidanceDistance)
+			return false;
+		else {
+			return true;
+		}
+	}
+				
 }
