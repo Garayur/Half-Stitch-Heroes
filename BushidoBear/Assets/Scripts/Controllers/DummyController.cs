@@ -13,4 +13,8 @@ public class DummyController : BaseController
 	void Update () {
         base.Update();
 	}
+    protected override void CheckMoveSet()
+    {
+        Debug.Log("not Implemented Yet");
+    }
 }

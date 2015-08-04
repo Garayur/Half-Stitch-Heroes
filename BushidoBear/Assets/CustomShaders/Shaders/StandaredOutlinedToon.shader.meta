@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: 851ddc9604f0738458959520b5387ac4
+timeCreated: 1437268834
+licenseType: Free
+ShaderImporter:
+  defaultTextures:
+  - _MainTex: {instanceID: 0}
+  - _MetallicGlossMap: {instanceID: 0}
+  - _BumpMap: {instanceID: 0}
+  - _ParallaxMap: {instanceID: 0}
+  - _OcclusionMap: {instanceID: 0}
+  - _EmissionMap: {instanceID: 0}
+  - _DetailMask: {instanceID: 0}
+  - _DetailAlbedoMap: {instanceID: 0}
+  - _DetailNormalMap: {instanceID: 0}
+  - _Ramp: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

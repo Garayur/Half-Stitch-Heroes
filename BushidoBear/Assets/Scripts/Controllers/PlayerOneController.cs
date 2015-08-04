@@ -23,6 +23,11 @@ public class PlayerOneController : BaseController
         }
 	}
 
+    protected override void CheckMoveSet()
+    {
+        Debug.Log("not Implemented Yet");
+    }
+
     void OnDrawGizmos()
     {
         //Gizmos.DrawLine(transform.position, transform.position - (Vector3.up * jumpRayLength));

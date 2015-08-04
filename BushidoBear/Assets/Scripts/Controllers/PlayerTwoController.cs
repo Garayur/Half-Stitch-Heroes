@@ -21,7 +21,8 @@ public class PlayerTwoController : BaseController
         h = Input.GetAxisRaw("HorizontalP2");
         v = Input.GetAxisRaw("VerticalP2");
 
-        
+        tH = h;
+        tV = v;
 
         if (Input.GetKeyDown(KeyCode.Joystick2Button0))
         {
@@ -42,6 +43,15 @@ public class PlayerTwoController : BaseController
         
         UpdateTurning();
         UpdateMovement();
+    }
+
+    protected override void CheckMoveSet()
+    {
+        if (this.animator.GetCurrentAnimatorStateInfo(0).IsName("Locomotion") ||
+            this.animator.GetCurrentAnimatorStateInfo(0).IsName("AttackIdle"))
+        {
+            UpdateQueue();
+        }
     }
 }
 

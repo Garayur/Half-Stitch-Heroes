@@ -38,12 +38,10 @@ public class ComboStateMachine
         float delay;
         if (timer == null)
         {
-            UnityEngine.Debug.Log("timer is null");
             delay = -1;
         }
         else
         {
-            UnityEngine.Debug.Log(timer.Elapsed.Seconds);
             timer.Stop();
             delay = timer.Elapsed.Seconds;
         }
@@ -52,7 +50,6 @@ public class ComboStateMachine
         {
             if(paths[input].delay < delay  || delay == -1) 
             {
-                UnityEngine.Debug.Log(paths[input].state.moveNumber);
                 controller.setState(paths[input].state);
                 timer = new Stopwatch();
                 timer.Start();

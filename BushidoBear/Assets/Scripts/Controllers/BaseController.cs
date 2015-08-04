@@ -8,7 +8,7 @@ public enum Action
     HEAVYATTACK
 };
 
-public class BaseController : MonoBehaviour
+public abstract class BaseController : MonoBehaviour
 {
     /*[System.Serializable]
     public struct Action
@@ -44,23 +44,32 @@ public class BaseController : MonoBehaviour
     //---------------
     // protected
     //---------------
+    protected Animator animator = null;
     protected bool isRun = false;
     protected bool isJumping = false;
     protected float moveSpeedScale = 1.0f;
-    protected float h, v;
+    protected float h, v, tH, tV;
 
     //---------------
     // private
     //---------------
     private CharacterController charController = null;
-    private Animator animator = null;
     private Vector3 moveDir = Vector3.zero;
     private Vector3 dir = Vector3.zero;
+    private Vector3 turnDir = Vector3.zero;
     private Vector3 move = Vector3.zero;
     private int actionValue;
+    private int moveCoolDownTimer = 1;
+    private bool isCoolDown = false;
     private ComboStateMachine currentState;
     private ComboStateMachine startState;
+    private Queue<Action> moveList = new Queue<Action>(); 
     private List<ComboStateMachine> states;
+
+    //----------------
+    //abstract methods
+    //----------------
+    protected abstract void CheckMoveSet();
 
     protected void Awake()
     {
@@ -89,6 +98,11 @@ public class BaseController : MonoBehaviour
             moveSpeedScale = animator.GetFloat("SpeedScale");
             UpdateControl();
         }
+
+        //---------------------
+        //Animation Moveset Test
+        //---------------------
+        CheckMoveSet();
 
         //------------------
         //Parameters sync
@@ -127,15 +141,16 @@ public class BaseController : MonoBehaviour
     {
         // turn
         // make seperate from movement
-        if (dir.magnitude > 0.01f)
+        if (turnDir.magnitude > 0.01f)
         {
-            transform.forward = Vector3.RotateTowards(transform.forward, dir, turnSpeed * Time.deltaTime, turnSpeed);
-            move += dir * Time.deltaTime * moveSpeed * moveSpeedScale;
+            transform.forward = Vector3.RotateTowards(transform.forward, turnDir, turnSpeed * Time.deltaTime, turnSpeed);
+            move += turnDir * Time.deltaTime * moveSpeed * moveSpeedScale;
         }
     }
 
     private void UpdateMoveControl()
     {
+        //movement direction
         dir = Vector3.zero;
         
 
@@ -148,6 +163,16 @@ public class BaseController : MonoBehaviour
 
         moveDir = dir;
 
+        turnDir = Vector3.zero;
+
+        //Turn Direction
+        turnDir.x = tH;
+        turnDir.z = tV;
+
+        turnDir.y = 0.0f;
+
+        turnDir = Vector3.ClampMagnitude(turnDir, 1.0f);
+
         //Run key check
         isRun = true;
 
@@ -155,6 +180,7 @@ public class BaseController : MonoBehaviour
         if (isRun == true)
         {
             dir *= runSpeedScale;
+            turnDir *= runSpeedScale;
         }
 
 
@@ -171,12 +197,46 @@ public class BaseController : MonoBehaviour
 
     protected void LightAttack()
     {
-        currentState.onInput(Action.LIGHTATTACK);
+        if (moveList.Count <= 5)
+        {
+            moveList.Enqueue(Action.LIGHTATTACK);
+
+            if (!isCoolDown)
+            {
+                StartCoroutine(MoveCoolDown());
+                isCoolDown = true;
+            }
+            else
+            {
+                moveCoolDownTimer += 1;
+            }
+        }
     }
 
     protected void HeavyAttack()
     {
-        currentState.onInput(Action.HEAVYATTACK);
+        if (moveList.Count <= 5)
+        {
+            moveList.Enqueue(Action.HEAVYATTACK);
+
+            if (!isCoolDown)
+            {
+                StartCoroutine(MoveCoolDown());
+                isCoolDown = true;
+            }
+            else
+            {
+                moveCoolDownTimer += 1;
+            }
+        }
+    }
+
+    protected void UpdateQueue()
+    {
+        if (moveList.Count > 0)
+        {
+            currentState.onInput(moveList.Dequeue());
+        }
     }
 
     internal void setState(ComboStateMachine state)
@@ -327,6 +387,14 @@ public class BaseController : MonoBehaviour
     protected virtual void Death()
     {
         throw new System.NotImplementedException();
+    }
+
+    private IEnumerator MoveCoolDown()
+    {
+        yield return new WaitForSeconds(moveCoolDownTimer);
+
+        currentState = startState;
+        isCoolDown = false;
     }
 
     //old code that im still referencing. soon to be phased out.
