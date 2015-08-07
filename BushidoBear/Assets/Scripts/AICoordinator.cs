@@ -38,7 +38,7 @@ public class AICoordinator : MonoBehaviour {
 		if(alertTriggered) {
 			timer -= Time.deltaTime;
 			if(timer <= 0) {
-				AssignNormalizedMovementVector();
+				AssignMovementVector();
 				timer = movementUpdateInterval;
 			}
 		}
@@ -137,7 +137,7 @@ public class AICoordinator : MonoBehaviour {
 		}
 	}
 
-	protected void AssignNormalizedMovementVector(){
+	protected void AssignMovementVector(){
 		Vector3 centroid, movementVector;
 
 		centroid = CalculateCentroid();
@@ -145,8 +145,8 @@ public class AICoordinator : MonoBehaviour {
 		foreach(AIBaseController ai in AISquad){
 			if(ai.IsAvailable()) {
 				movementVector = CalculateMovementVector(centroid, CalculateRepulsion(ai.gameObject), ai.gameObject);
-				//movementVector = ApplyBoundaries(movementVector, ai.gameObject);
-				ai.AssignMovementVector(Vector3.Normalize(movementVector));
+				movementVector = ApplyBoundaries(movementVector, ai.gameObject);
+				ai.AssignMovementVector(movementVector);
 			}
 		}
 
