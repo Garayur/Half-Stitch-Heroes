@@ -13,7 +13,10 @@ public class AICoordinator : MonoBehaviour {
 	protected float timer = 0.25f;
 	protected bool alertTriggered = false;
 
-	public int xmin, xmax, zmin, zmax;
+	public int xmin = 1;
+	public int xmax = 19;
+	public int zmin = -5;
+	public int zmax = 15;
 
 	protected void OnEnable() {
 		AIBaseController.OnAIStateChange += CheckSquadAssignments;
@@ -142,7 +145,8 @@ public class AICoordinator : MonoBehaviour {
 		foreach(AIBaseController ai in AISquad){
 			if(ai.IsAvailable()) {
 				movementVector = CalculateMovementVector(centroid, CalculateRepulsion(ai.gameObject), ai.gameObject);
-				ai.AssignMovementVector(movementVector);
+				//movementVector = ApplyBoundaries(movementVector, ai.gameObject);
+				ai.AssignMovementVector(Vector3.Normalize(movementVector));
 			}
 		}
 
@@ -176,7 +180,7 @@ public class AICoordinator : MonoBehaviour {
 
 		foreach (AIBaseController ai in AISquad) {
 			if(ai.gameObject != primary) {
-				if(TooClose(primary, ai.gameObject)) {
+				if(AITooClose(primary, ai.gameObject)) {
 					repulsion += primary.transform.position - ai.gameObject.transform.position;
 				}
 			}
@@ -195,16 +199,34 @@ public class AICoordinator : MonoBehaviour {
 
 		movementVector += repulsion;
 
-		return Vector3.Normalize(movementVector);
+		return movementVector;
 	}
 
 
-	protected bool TooClose(GameObject primary, GameObject secondary){
+	protected bool AITooClose(GameObject primary, GameObject secondary){
 		if(Vector3.Distance(primary.transform.position, secondary.transform.position) > avoidanceDistance)
 			return false;
 		else {
 			return true;
 		}
+	}
+
+	protected Vector3 ApplyBoundaries(Vector3 movementVector, GameObject ai) {
+		if(ai.transform.position.x < xmin) {
+			movementVector.x = 10;
+		}
+		else if(ai.transform.position.x > xmax) {
+			movementVector.x = -10;
+		}
+
+		if(ai.transform.position.z < zmin) {
+			movementVector.z = 10;
+		}
+		else if (ai.transform.position.z > zmax) {
+			movementVector.z = -10;
+		}
+
+		return movementVector;
 	}
 				
 }

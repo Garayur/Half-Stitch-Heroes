@@ -144,7 +144,7 @@ public abstract class BaseController : MonoBehaviour
         if (turnDir.magnitude > 0.01f)
         {
             transform.forward = Vector3.RotateTowards(transform.forward, turnDir, turnSpeed * Time.deltaTime, turnSpeed);
-            move += turnDir * Time.deltaTime * moveSpeed * moveSpeedScale;
+            move += moveDir * Time.deltaTime * moveSpeed * moveSpeedScale;
         }
     }
 
@@ -179,7 +179,7 @@ public abstract class BaseController : MonoBehaviour
         // run
         if (isRun == true)
         {
-            dir *= runSpeedScale;
+            moveDir *= runSpeedScale;
             turnDir *= runSpeedScale;
         }
 
