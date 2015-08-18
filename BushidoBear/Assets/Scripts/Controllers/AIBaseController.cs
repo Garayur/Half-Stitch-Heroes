@@ -12,6 +12,7 @@ public class AIBaseController : BaseController {
 	
 	protected AIState currentState;
 	protected float stateTimer;
+	protected float targetingTimer = 0;
 	protected GameObject target = null;
 	protected Vector3 vectorToTarget;
 	protected Vector3 normalizedVectorToTarget;
@@ -54,6 +55,7 @@ public class AIBaseController : BaseController {
 		base.Update();
 		UpdateTurning();
 		UpdateMovement();
+
 	}
 	
 	
@@ -62,8 +64,18 @@ public class AIBaseController : BaseController {
 	}
 	
 	protected virtual void Positioning() {
+		targetingTimer -= Time.deltaTime;
+
+		if(targetingTimer <= 0) {
+			FindAndAssignFacingTarget();
+			targetingTimer = 1.0f;
+		}
+
 		h = movementVector.x;
 		v = movementVector.z;
+
+		tH = target.transform.position.x - gameObject.transform.position.x;
+		tV = target.transform.position.z - gameObject.transform.position.z;
 
 	}
 	
@@ -110,16 +122,22 @@ public class AIBaseController : BaseController {
 		if(distanceToTarget > maxAttackRange) {
 			h = normalizedVectorToTarget.x;
 			v = normalizedVectorToTarget.z;
+			tH = h;
+			tV = v;
 			return false;
 		}
 		else if(distanceToTarget < minAttackRange) {
 			h = -normalizedVectorToTarget.x;
 			v = -normalizedVectorToTarget.z;
+			tH = normalizedVectorToTarget.x;
+			tV = normalizedVectorToTarget.z;
 			return true;
 		}
 		else {
 			h = 0;
 			v = 0;
+			tH = h;
+			tV = v;
 			return true;
 		}
 	}
@@ -172,6 +190,31 @@ public class AIBaseController : BaseController {
 
 	public void AssignMovementVector(Vector3 newMovementVector) {
 		movementVector = newMovementVector;
+	}
+
+	protected void FindAndAssignFacingTarget() {
+		float shortestDistanceToPlayer = 100;
+		float distanceToPlayer = 0;
+
+		foreach(GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
+			distanceToPlayer = Vector3.Distance(player.transform.position, gameObject.transform.position);
+			if(distanceToPlayer < shortestDistanceToPlayer) {
+				shortestDistanceToPlayer = distanceToPlayer;
+				target = player;
+			}
+		}
+
+
+	}
+
+	
+	protected override void CheckMoveSet()
+	{
+		if (this.animator.GetCurrentAnimatorStateInfo(0).IsName("Locomotion") ||
+		    this.animator.GetCurrentAnimatorStateInfo(0).IsName("AttackIdle"))
+		{
+			UpdateQueue();
+		}
 	}
 
 
