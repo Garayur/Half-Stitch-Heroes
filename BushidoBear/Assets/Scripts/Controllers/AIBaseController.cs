@@ -8,14 +8,14 @@ public class AIBaseController : BaseController {
 	public float flinchDuration = 1.0f;
 	public float attackFrequency = 2.0f;
 	public float maxAttackRange = 3;
-	public float minAttackRange = 2;
+	public float minAttackRange = 1;
 	
 	protected AIState currentState;
 	protected float stateTimer;
 	protected float targetingTimer = 0;
 	protected GameObject target = null;
 	protected Vector3 vectorToTarget;
-	protected Vector3 normalizedVectorToTarget;
+	protected Vector3 VectorToTarget;
 	protected float distanceToTarget;
 	protected Vector3 movementVector;
 	
@@ -28,7 +28,7 @@ public class AIBaseController : BaseController {
 		isRun = true;
 	}
 	
-	protected void Update () {
+	protected override void Update () {
 		switch (currentState) {
 		case AIState.StartingAnimation:
 			StartAnimation();
@@ -117,20 +117,20 @@ public class AIBaseController : BaseController {
 	}
 
 	protected virtual bool ApproachedTargetUntilInRange() {
-		normalizedVectorToTarget = Vector3.Normalize(vectorToTarget);
+		VectorToTarget = vectorToTarget;
 		
 		if(distanceToTarget > maxAttackRange) {
-			h = normalizedVectorToTarget.x;
-			v = normalizedVectorToTarget.z;
+			h = VectorToTarget.x;
+			v = VectorToTarget.z;
 			tH = h;
 			tV = v;
 			return false;
 		}
 		else if(distanceToTarget < minAttackRange) {
-			h = -normalizedVectorToTarget.x;
-			v = -normalizedVectorToTarget.z;
-			tH = normalizedVectorToTarget.x;
-			tV = normalizedVectorToTarget.z;
+			h = -VectorToTarget.x;
+			v = -VectorToTarget.z;
+			tH = VectorToTarget.x;
+			tV = VectorToTarget.z;
 			return true;
 		}
 		else {
@@ -152,6 +152,7 @@ public class AIBaseController : BaseController {
 	public virtual void AttackNewTarget(GameObject newTarget) {
 		target = newTarget;
 		currentState = AIState.Attacking;
+		isRun = true;
 		SendStateChangeEvent();
 	}
 	
@@ -171,14 +172,13 @@ public class AIBaseController : BaseController {
 	public void StartCombatPositioning(){
 		if(currentState == AIState.StartingAnimation) {
 			currentState = AIState.Positioning;
+			isRun = false;
 			SendStateChangeEvent();
 		}
 	}
 
-	public void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
-		base.TakeDamage(other, hitPosition, hitDirection, amount);
+	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
 		if(currentState == AIState.StartingAnimation) {
-			currentState = AIState.Positioning;
 			SendStateChangeEvent();
 		}
 		else if(currentState == AIState.Attacking) {
@@ -186,6 +186,7 @@ public class AIBaseController : BaseController {
 			stateTimer = flinchDuration;
 			SendStateChangeEvent();
 		}
+		base.TakeDamage(other, hitPosition, hitDirection, amount);
 	}
 
 	public void AssignMovementVector(Vector3 newMovementVector) {

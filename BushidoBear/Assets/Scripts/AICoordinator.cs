@@ -7,9 +7,10 @@ public class AICoordinator : MonoBehaviour {
 	public List<AIBaseController> AISquad;
 	Dictionary<GameObject, List<AIBaseController>> aiTargetAssignments = new Dictionary<GameObject, List<AIBaseController>>();
 
-	public float avoidanceDistance = 10;
+	public float avoidanceDistance = 8;
+	public float unavailableAvoidanceDistance = 4;
 	public float maxDistance = 10;
-	protected float movementUpdateInterval = 0.35f;
+	protected float movementUpdateInterval = 0.5f;
 	protected float timer = 0.25f;
 	protected bool alertTriggered = false;
 
@@ -95,7 +96,8 @@ public class AICoordinator : MonoBehaviour {
 	protected void ReassignAI(AIBaseController ai, GameObject target) {
 		if(target != null) {
 			aiTargetAssignments[target].Remove(ai);
-			AssignAIToTarget(target);
+			if(aiTargetAssignments[target].Count <= 0)
+				AssignAIToTarget(target);
 		}
 	}
 
@@ -163,10 +165,10 @@ public class AICoordinator : MonoBehaviour {
 			}
 		}
 
-		foreach (GameObject player in aiTargetAssignments.Keys ) {
-			centroid += player.transform.position;
-			count++;
-		}
+//		foreach (GameObject player in aiTargetAssignments.Keys ) {
+//			centroid += player.transform.position;
+//			count++;
+//		}
 
 		centroid.x = centroid.x / count;
 		centroid.y = 0;
@@ -180,7 +182,7 @@ public class AICoordinator : MonoBehaviour {
 
 		foreach (AIBaseController ai in AISquad) {
 			if(ai.gameObject != primary) {
-				if(AITooClose(primary, ai.gameObject)) {
+				if(AITooClose(primary, ai)) {
 					repulsion += primary.transform.position - ai.gameObject.transform.position;
 				}
 			}
@@ -203,8 +205,15 @@ public class AICoordinator : MonoBehaviour {
 	}
 
 
-	protected bool AITooClose(GameObject primary, GameObject secondary){
-		if(Vector3.Distance(primary.transform.position, secondary.transform.position) > avoidanceDistance)
+	protected bool AITooClose(GameObject primary, AIBaseController secondary){
+		float distance;
+
+		if(secondary.IsAvailable())
+			distance = avoidanceDistance;
+		else
+			distance = unavailableAvoidanceDistance;
+
+		if(Vector3.Distance(primary.transform.position, secondary.gameObject.transform.position) > distance)
 			return false;
 		else {
 			return true;
