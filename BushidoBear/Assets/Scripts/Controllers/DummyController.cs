@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class DummyController : BaseController 
+public class DummyController : BaseControllerOld 
 {
 
 	// Use this for initialization

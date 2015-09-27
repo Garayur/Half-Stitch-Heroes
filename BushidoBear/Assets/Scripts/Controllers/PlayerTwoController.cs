@@ -1,58 +1,14 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerTwoController : BaseController 
+public class PlayerTwoController : BasePlayerController 
 {
-    KeyCode player2 = KeyCode.Joystick2Button0;
-
+    
     void Start()
     {
-        /*actionList = new Action[1];
-
-        Action lightAttackCombo = new Action();
-        lightAttackCombo.m_name = "LightAttack";
-        lightAttackCombo.m_keyCode = KeyCode.Joystick2Button2;
-
-        actionList[0] = lightAttackCombo;*/
+        gamePad = 2;
     }
 
-    override protected void Update()
-    {
-        h = Input.GetAxisRaw("HorizontalP2");
-        v = Input.GetAxisRaw("VerticalP2");
-
-        tH = h;
-        tV = v;
-
-        if (Input.GetKeyDown(KeyCode.Joystick2Button0))
-        {
-            isJumping = true;
-        }
-
-        if (Input.GetKeyDown(KeyCode.Joystick2Button2))
-        {
-            LightAttack();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Joystick2Button3))
-        {
-            HeavyAttack();
-        }
-
-        base.Update();
-        
-        UpdateTurning();
-        UpdateMovement();
-    }
-
-    protected override void CheckMoveSet()
-    {
-        if (this.animator.GetCurrentAnimatorStateInfo(0).IsName("Locomotion") ||
-            this.animator.GetCurrentAnimatorStateInfo(0).IsName("AttackIdle"))
-        {
-            UpdateQueue();
-        }
-    }
 }
 
 /*//this is for testing input listening

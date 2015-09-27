@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerOneController : BaseController
+public class PlayerOneController : BaseControllerOld
 {
     void Start()
     {

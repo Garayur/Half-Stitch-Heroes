@@ -3,7 +3,7 @@ using System.Collections;
 
 public enum AIState {StartingAnimation, Positioning, Attacking, Flinching, Fallen, Dying, Dead};
 
-public class AIBaseController : BaseController {
+public class AIBaseController : BaseControllerOld {
 
 	public float flinchDuration = 1.0f;
 	public float attackFrequency = 2.0f;
@@ -175,7 +175,7 @@ public class AIBaseController : BaseController {
 		}
 	}
 
-	public void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
+	public void TakeDamage(BaseControllerOld other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
 		base.TakeDamage(other, hitPosition, hitDirection, amount);
 		if(currentState == AIState.StartingAnimation) {
 			currentState = AIState.Positioning;
