@@ -15,8 +15,8 @@ public class BasePlayerController : BaseController
 
     override protected void Update()
     {
-        h = Input.GetAxisRaw("HorizontalP2");
-        v = Input.GetAxisRaw("VerticalP2");
+        h = Input.GetAxisRaw("HorizontalP" + gamePad);
+        v = Input.GetAxisRaw("VerticalP" + gamePad);
 
         tH = h;
         tV = v;
