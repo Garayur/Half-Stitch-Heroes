@@ -3,7 +3,7 @@ using System.Collections;
 
 public enum AIState {StartingAnimation, Positioning, Attacking, Flinching, Fallen, Dying, Dead};
 
-public class AIBaseController : BaseControllerOld {
+public class AIBaseController : BaseController {
 
 	public float flinchDuration = 1.0f;
 	public float attackFrequency = 2.0f;
@@ -17,7 +17,7 @@ public class AIBaseController : BaseControllerOld {
 	protected Vector3 vectorToTarget;
 	protected Vector3 VectorToTarget;
 	protected float distanceToTarget;
-	protected Vector3 movementVector;
+	protected Vector3 aiMovementVector;
 	
 	
 	public delegate void AIStateChanged(AIStateData newState);
@@ -71,8 +71,8 @@ public class AIBaseController : BaseControllerOld {
 			targetingTimer = 1.0f;
 		}
 
-		h = movementVector.x;
-		v = movementVector.z;
+		h = aiMovementVector.x;
+		v = aiMovementVector.z;
 
 		tH = target.transform.position.x - gameObject.transform.position.x;
 		tV = target.transform.position.z - gameObject.transform.position.z;
@@ -177,12 +177,8 @@ public class AIBaseController : BaseControllerOld {
 		}
 	}
 
-<<<<<<< HEAD
-	public void TakeDamage(BaseControllerOld other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
-		base.TakeDamage(other, hitPosition, hitDirection, amount);
-=======
-	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
->>>>>>> a5888dacde7f54fe9fc8431182f81e4b290e29a1
+
+	public void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
 		if(currentState == AIState.StartingAnimation) {
 			SendStateChangeEvent();
 		}
@@ -191,11 +187,11 @@ public class AIBaseController : BaseControllerOld {
 			stateTimer = flinchDuration;
 			SendStateChangeEvent();
 		}
-		base.TakeDamage(other, hitPosition, hitDirection, amount);
+		//base.TakeDamage(other, hitPosition, hitDirection, amount);
 	}
 
 	public void AssignMovementVector(Vector3 newMovementVector) {
-		movementVector = newMovementVector;
+		aiMovementVector = newMovementVector;
 	}
 
 	protected void FindAndAssignFacingTarget() {
@@ -213,17 +209,5 @@ public class AIBaseController : BaseControllerOld {
 
 	}
 
-	
-	protected override void CheckMoveSet()
-	{
-		if (this.animator.GetCurrentAnimatorStateInfo(0).IsName("Locomotion") ||
-		    this.animator.GetCurrentAnimatorStateInfo(0).IsName("AttackIdle"))
-		{
-			UpdateQueue();
-		}
-	}
-
-
-	
 
 }
