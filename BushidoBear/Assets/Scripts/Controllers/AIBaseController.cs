@@ -206,8 +206,23 @@ public class AIBaseController : BaseController {
 			}
 		}
 
+	}
+
+	void OnEnable() {
+		BasePlayerController.OnPlayerEvent += HandlePlayerEvent;
+	}
+	
+	void OnDisable() {
+		BasePlayerController.OnPlayerEvent -= HandlePlayerEvent;
+	}
+
+	protected void HandlePlayerEvent(ControllerActions action, BaseController player){
 
 	}
+
+
+
+
 
 
 }

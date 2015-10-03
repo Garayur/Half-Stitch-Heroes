@@ -34,3 +34,6 @@ BushidoBear/Assets/Scripts/CharacterActionEventData.cs
 BushidoBear/Assets/Scripts/CharacterActionEventData.cs.meta
 BushidoBear/Assets/Scripts/Controllers/SimpleAIController.cs
 BushidoBear/Assets/Scripts/Controllers/SimpleAIController.cs.meta
+BushidoBear/Assets/Scripts/Controllers/JudoJaguarController.cs.meta
+BushidoBear/Assets/Scripts/Controllers/KravMagaMacawController.cs.meta
+BushidoBear/Assets/Scripts/Controllers/NunchuckWoodchuckController.cs.meta

@@ -4,7 +4,7 @@ using System.Collections;
 
 public class BasePlayerController : BaseController
 {
-    public delegate void PlayerAction(ControllerActions controllerAction);
+    public delegate void PlayerAction(ControllerActions controllerAction, BaseController player);
     public static event PlayerAction OnPlayerEvent;
 
     public BasePlayerCharacterController character;
@@ -44,45 +44,45 @@ public class BasePlayerController : BaseController
     //============================================
     protected override void LightAttack()
     {
-        SendControllerEvent(ControllerActions.LIGHTATTACK);
+        SendControllerEvent(ControllerActions.LIGHTATTACK, this);
         character.LightAttack(isJumping);
     }
 
     protected override void HeavyAttack()
     {
-        SendControllerEvent(ControllerActions.HEAVYATTACK);
+        SendControllerEvent(ControllerActions.HEAVYATTACK, this);
         character.HeavyAttack(isJumping);
     }
 
     protected override void Grab()
     {
-        SendControllerEvent(ControllerActions.GRAB);
+        SendControllerEvent(ControllerActions.GRAB, this);
         character.Grab(isJumping);
     }
 
     protected override void Block()
     {
-        SendControllerEvent(ControllerActions.BLOCK);
+        SendControllerEvent(ControllerActions.BLOCK, this);
         character.Block(isJumping);
     }
 
     protected override void SpecialAction()
     {
-        SendControllerEvent(ControllerActions.SPECIAL);
+        SendControllerEvent(ControllerActions.SPECIAL, this);
         character.SpecialAction(isJumping);
     }
 
     protected override void Jump()
     {
-        SendControllerEvent(ControllerActions.JUMP);    
+        SendControllerEvent(ControllerActions.JUMP, this);    
         base.Jump();
     }
     
-    private void SendControllerEvent (ControllerActions action)
+    private void SendControllerEvent (ControllerActions action, BaseController player)
     {
         try
         {
-            OnPlayerEvent(action);
+            OnPlayerEvent(action, player);
         }
         catch(NullReferenceException)
         {
