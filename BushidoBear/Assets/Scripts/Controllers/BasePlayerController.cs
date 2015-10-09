@@ -4,7 +4,7 @@ using System.Collections;
 
 public class BasePlayerController : BaseController
 {
-    public delegate void PlayerAction(ControllerActions controllerAction, BaseController player);
+    public delegate void PlayerAction(ControllerActions controllerAction, BaseController player, float range);
     public static event PlayerAction OnPlayerEvent;
 
     public BasePlayerCharacterController character;
@@ -78,11 +78,11 @@ public class BasePlayerController : BaseController
         base.Jump();
     }
     
-    private void SendControllerEvent (ControllerActions action, BaseController player)
+    private void SendControllerEvent (ControllerActions action, BaseController player, float range = 1)
     {
         try
         {
-            OnPlayerEvent(action, player);
+            OnPlayerEvent(action, player, range);
         }
         catch(NullReferenceException)
         {

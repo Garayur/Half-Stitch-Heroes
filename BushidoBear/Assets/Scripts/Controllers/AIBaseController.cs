@@ -216,10 +216,45 @@ public class AIBaseController : BaseController {
 		BasePlayerController.OnPlayerEvent -= HandlePlayerEvent;
 	}
 
-	protected void HandlePlayerEvent(ControllerActions action, BaseController player){
+	protected void HandlePlayerEvent(ControllerActions action, BaseController player, float range){
+		if(player.gameObject == target) {
+			float distanceToPlayer = Vector3.Distance(player.gameObject.transform.position, this.gameObject.transform.position);
 
+			switch (action) {
+			case ControllerActions.BLOCK:
+				TargetBlocking();
+				break;
+			case ControllerActions.GRAB:
+				TargetBlocking();
+				break;
+			case ControllerActions.HEAVYATTACK:
+				TargetHeavyAttacking();
+				break;
+			case ControllerActions.JUMP:
+				TargetJumping();
+				break;
+			case ControllerActions.LIGHTATTACK:
+				TargetLightAttacking();
+				break;
+			case ControllerActions.SPECIAL:
+				TargetSpecialAttacking();
+				break;
+			}
+		}
 	}
 
+
+	protected virtual void TargetBlocking(){}
+
+	protected virtual void TargetGrabbing(){}
+
+	protected virtual void TargetHeavyAttacking(){}
+
+	protected virtual void TargetJumping(){}
+
+	protected virtual void TargetLightAttacking(){}
+
+	protected virtual void TargetSpecialAttacking(){}
 
 
 
