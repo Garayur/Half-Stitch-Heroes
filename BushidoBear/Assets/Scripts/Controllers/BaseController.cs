@@ -20,7 +20,7 @@ public class BaseController : MonoBehaviour
     public bool enableControl = true;
 
     public float turnSpeed = 10.0f;
-    public float moveSpeed = 2.0f;
+    public float moveSpeed = 5.0f;
     public float runSpeedScale = 2.0f;
 
     public Vector3 attackOffset = Vector3.zero;
