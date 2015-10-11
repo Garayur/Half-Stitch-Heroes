@@ -180,4 +180,35 @@ public class BaseController : MonoBehaviour
             animator.SetTrigger("Jump");
         }
     }
+
+    protected virtual void TakeDamage(BaseControllerOld other, Vector3 hitPosition, Vector3 hitDirection, float amount)
+    {
+        if ((health -= amount) < 0)
+        {
+            //Death();
+            print("Ya dead son");
+        }
+
+        //--------------------
+        // direction
+        if (other != null)
+        {
+            transform.forward = -other.transform.forward;
+        }
+        else
+        {
+            hitDirection.y = 0.0f;
+            transform.forward = -hitDirection.normalized;
+        }
+
+        //--------------------
+        // reaction  
+        string reaction = damageReaction[Random.Range(0, damageReaction.Length)];		// random damage animation test
+        animator.CrossFade(reaction, 0.1f, 0, 0.0f);
+
+
+        //--------------------
+        // hitFX 
+        GameObject.Instantiate(m_hitEffect, hitPosition, Quaternion.identity);
+    }
 }
