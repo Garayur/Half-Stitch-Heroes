@@ -181,7 +181,7 @@ public class BaseController : MonoBehaviour
         }
     }
 
-    protected virtual void TakeDamage(BaseControllerOld other, Vector3 hitPosition, Vector3 hitDirection, float amount)
+    public virtual void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount)
     {
         if ((health -= amount) < 0)
         {

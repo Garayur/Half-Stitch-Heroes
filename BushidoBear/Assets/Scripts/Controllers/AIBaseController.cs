@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public enum AIState {StartingAnimation, Positioning, Attacking, Flinching, Fallen, Dying, Dead};
 
@@ -178,7 +179,7 @@ public class AIBaseController : BaseController {
 	}
 
 
-	public void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
+	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
 		if(currentState == AIState.StartingAnimation) {
 			SendStateChangeEvent();
 		}
@@ -216,9 +217,8 @@ public class AIBaseController : BaseController {
 		BasePlayerController.OnPlayerEvent -= HandlePlayerEvent;
 	}
 
-	protected void HandlePlayerEvent(ControllerActions action, BaseController player, float range){
-		if(player.gameObject == target) {
-			float distanceToPlayer = Vector3.Distance(player.gameObject.transform.position, this.gameObject.transform.position);
+	protected void HandlePlayerEvent(ControllerActions action, BaseController player, List<AIBaseController> targetList){
+		if(player.gameObject == target && targetList.Contains(this)) {
 
 			switch (action) {
 			case ControllerActions.BLOCK:
