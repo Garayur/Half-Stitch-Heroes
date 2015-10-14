@@ -37,4 +37,12 @@ public class ComboNode
         }
         return true;
     }
+
+	public ControllerActions[] GetComboSequence(){
+		return comboSequence;
+	}
+
+	public int GetLength() {
+		return length;
+	}
 }

@@ -44,42 +44,42 @@ public class BasePlayerController : BaseController
     //============================================
     //PlayerActions
     //============================================
-    protected override void LightAttack()
-    {
+	protected override void LightAttack(int animationNumber = 0)
+	{
         PredictAttack();
         SendControllerEvent(ControllerActions.LIGHTATTACK, this);
         character.LightAttack(isJumping);
     }
 
-    protected override void HeavyAttack()
-    {
+	protected override void HeavyAttack(int animationNumber = 0)
+	{
         PredictAttack();
         SendControllerEvent(ControllerActions.HEAVYATTACK, this);
         character.HeavyAttack(isJumping);
     }
 
-    protected override void Grab()
-    {
+	protected override void Grab(int animationNumber = 0)
+	{
         PredictAttack();
         SendControllerEvent(ControllerActions.GRAB, this);
         character.Grab(isJumping);
     }
 
-    protected override void Block()
-    {
+	protected override void Block(int animationNumber = 0)
+	{
         SendControllerEvent(ControllerActions.BLOCK, this);
         character.Block(isJumping);
     }
 
-    protected override void SpecialAction()
-    {
+	protected override void SpecialAction(int animationNumber = 0)
+	{
         PredictAttack();
         SendControllerEvent(ControllerActions.SPECIAL, this);
         character.SpecialAction(isJumping);
     }
 
-    protected override void Jump()
-    {
+	protected override void Jump(int animationNumber = 0)
+	{
         SendControllerEvent(ControllerActions.JUMP, this);    
         base.Jump();
     }

@@ -19,12 +19,17 @@ public class AIBaseController : BaseController {
 	protected Vector3 VectorToTarget;
 	protected float distanceToTarget;
 	protected Vector3 aiMovementVector;
+
+	protected int currentComboStep = 0;
+	protected List<ComboNode> currentCombo;
+
 	
-	
+	public delegate void AnimationFinishedDelegate();
+	public AnimationFinishedDelegate animationFinishedDelegate;
 	public delegate void AIStateChanged(AIStateData newState);
 	public static event AIStateChanged OnAIStateChange;
 	
-	void Start () {
+	public virtual void Start () {
 		currentState = AIState.StartingAnimation;
 		isRun = true;
 	}
@@ -87,9 +92,58 @@ public class AIBaseController : BaseController {
 		if (ApproachedTargetUntilInRange()) {
 			stateTimer -= Time.deltaTime;
 			if(stateTimer <= 0) {
-				LightAttack();
-				stateTimer = attackFrequency;
+				Attack();
 			}
+		}
+	}
+
+	protected virtual void Attack() {
+		animationFinishedDelegate = ResetAttackTimer;
+	}
+
+	protected void ResetAttackTimer() {
+		stateTimer = attackFrequency;
+	}
+
+	protected void ExecuteCombo(List<ComboNode> comboSequence) {
+		currentCombo = comboSequence;
+		currentComboStep = 0;
+		ExecuteMove(currentCombo[currentComboStep].GetComboSequence()[0], currentCombo[currentComboStep].GetAnimation());
+		animationFinishedDelegate = ContinueCombo;
+	}
+	
+	protected void ContinueCombo() {
+		ExecuteMove(currentCombo[currentComboStep].GetComboSequence()[(currentCombo[currentComboStep].GetComboSequence().Length -1)], currentCombo[currentComboStep].GetAnimation()); //last move in the combo
+			if(currentCombo[currentComboStep].IsLastCombo()) {
+				animationFinishedDelegate = ResetAttackTimer;
+		}
+		else{
+			animationFinishedDelegate = ContinueCombo;
+			currentComboStep++;
+		}
+			
+	}
+
+	protected void ExecuteMove(ControllerActions action, int animationNumber){
+		switch(action) {
+		case ControllerActions.BLOCK:
+			Block(animationNumber);
+			break;
+		case ControllerActions.GRAB:
+			Grab(animationNumber);
+			break;
+		case ControllerActions.HEAVYATTACK:
+			HeavyAttack(animationNumber);
+			break;
+		case ControllerActions.JUMP:
+			Jump(animationNumber);
+			break;
+		case ControllerActions.LIGHTATTACK:
+			LightAttack(animationNumber);
+			break;
+		case ControllerActions.SPECIAL:
+			SpecialAction(animationNumber);
+			break;
 		}
 	}
 	
@@ -188,7 +242,7 @@ public class AIBaseController : BaseController {
 			stateTimer = flinchDuration;
 			SendStateChangeEvent();
 		}
-		//base.TakeDamage(other, hitPosition, hitDirection, amount);
+		base.TakeDamage(other, hitPosition, hitDirection, amount);
 	}
 
 	public void AssignMovementVector(Vector3 newMovementVector) {
@@ -209,6 +263,10 @@ public class AIBaseController : BaseController {
 
 	}
 
+	public void AnimationFinishedInterface() { //public function so animator can call animationFinishedDelegate
+		animationFinishedDelegate();
+	}
+
 	void OnEnable() {
 		BasePlayerController.OnPlayerEvent += HandlePlayerEvent;
 	}
@@ -225,7 +283,7 @@ public class AIBaseController : BaseController {
 				TargetBlocking();
 				break;
 			case ControllerActions.GRAB:
-				TargetBlocking();
+				TargetGrabbing(player);
 				break;
 			case ControllerActions.HEAVYATTACK:
 				TargetHeavyAttacking();
@@ -246,7 +304,7 @@ public class AIBaseController : BaseController {
 
 	protected virtual void TargetBlocking(){}
 
-	protected virtual void TargetGrabbing(){}
+	protected virtual void TargetGrabbing(BaseController player){}
 
 	protected virtual void TargetHeavyAttacking(){}
 

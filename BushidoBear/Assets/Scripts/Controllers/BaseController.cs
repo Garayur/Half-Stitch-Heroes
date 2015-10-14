@@ -163,18 +163,18 @@ public class BaseController : MonoBehaviour
     //================================================
     //ControllerActions
     //================================================
-    protected virtual void LightAttack(){}
+    protected virtual void LightAttack(int animationNumber = 0){}
 
-    protected virtual void HeavyAttack(){}
+	protected virtual void HeavyAttack(int animationNumber = 0){}
 
-    protected virtual void Block(){}
+	protected virtual void Block(int animationNumber = 0){}
 
-    protected virtual void SpecialAction(){}
+	protected virtual void SpecialAction(int animationNumber = 0){}
 
-    protected virtual void Grab(){}
+	protected virtual void Grab(int animationNumber = 0){}
 
-    protected virtual void Jump()
-    {
+	protected virtual void Jump(int animationNumber = 0)
+	{
         if (charController.isGrounded)
         {
             animator.SetTrigger("Jump");
