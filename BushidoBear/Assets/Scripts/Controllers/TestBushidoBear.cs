@@ -13,17 +13,21 @@ public class TestBushidoBear : BasePlayerCharacterController
 
 	}
 
-    public override void LightAttack(bool isJumping)
+	public override void LightAttack(bool isJumping, int animationNumber)
     {
         if (!isJumping)
         {
             comboQueue.Enqueue(ControllerActions.LIGHTATTACK);
-            ActivateCombo();
+			if(!ActivateCombo()) {
+
+			}
         }
     }
 
-    void ComboCheck(List<ComboNode> nodes)
+    bool ComboCheck(List<ComboNode> nodes)
     {
+		currentAnimationNumber = -1;
+
         foreach (ComboNode i in nodes)
         {
             if (i.isMatchingCombo(comboQueue.ToArray()))
@@ -36,28 +40,37 @@ public class TestBushidoBear : BasePlayerCharacterController
                 }
             }
         }
+
+		if(currentAnimationNumber == -1)
+			return false;
+		else
+			return true;
     }
 
-    void ActivateCombo ()
+    bool ActivateCombo ()
     {
         int length = comboQueue.Count;
+		bool isValidCombo = false;
         switch (length)
         {
             case 2:
-                ComboCheck(twoButtonCombo);
+                isValidCombo = ComboCheck(twoButtonCombo);
                 break;
             case 3:
-                ComboCheck(threeButtonCombo);
+				isValidCombo =ComboCheck(threeButtonCombo);
                 break;
             case 4:
-                ComboCheck(fourButtonCombo);
+				isValidCombo =ComboCheck(fourButtonCombo);
                 break;
             case 5:
-                ComboCheck(fiveButtonCombo);
+				isValidCombo = ComboCheck(fiveButtonCombo);
                 break;
             default:
+			isValidCombo = false;
                 break;
         }
+
+		return isValidCombo;
     }
 
     void ClearComboQueue()

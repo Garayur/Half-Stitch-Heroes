@@ -36,6 +36,9 @@ public class BaseController : MonoBehaviour
     public string[] damageReaction;
     public Action[] actionList;
 
+	public delegate void AnimationFinishedDelegate();
+	public AnimationFinishedDelegate animationFinishedDelegate;
+
     //---------------
     // protected
     //---------------
@@ -44,6 +47,9 @@ public class BaseController : MonoBehaviour
     protected bool isJumping = false;
     protected float moveSpeedScale = 1.0f;
     protected float h, v, tH, tV;
+	protected bool isGrappled;
+	protected bool isGrappling;
+	protected BaseController grappledBy;
 
     //---------------
     // private
@@ -181,6 +187,10 @@ public class BaseController : MonoBehaviour
         }
     }
 
+	public void AnimationFinishedInterface() { //public function so animator can call animationFinishedDelegate
+		animationFinishedDelegate();
+	}
+
     public virtual void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount)
     {
         if ((health -= amount) < 0)
@@ -211,4 +221,19 @@ public class BaseController : MonoBehaviour
         // hitFX 
         GameObject.Instantiate(m_hitEffect, hitPosition, Quaternion.identity);
     }
+
+	public virtual void BreakGrapple() {
+		isGrappled = false;
+	}
+
+	protected virtual void Grappled() {
+	}
+
+	public virtual bool Grapple(BaseController grappler) {
+		return false;
+	}
+
+	public virtual void GrappleTarget() {
+	}
+
 }

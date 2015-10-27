@@ -2,14 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public enum AIState {StartingAnimation, Positioning, Attacking, Flinching, Fallen, Dying, Dead};
+public enum AIState {StartingAnimation, Positioning, Attacking, Flinching, Fallen, Dying, Dead, Grappled};
 
 public class AIBaseController : BaseController {
 
 	public float flinchDuration = 1.0f;
 	public float attackFrequency = 2.0f;
 	public float maxAttackRange = 3;
-	public float minAttackRange = 1;
+	public float midAttackRange = 2.5f;
+	public float minAttackRange = 1.5f;
 	
 	protected AIState currentState;
 	protected float stateTimer;
@@ -22,10 +23,7 @@ public class AIBaseController : BaseController {
 
 	protected int currentComboStep = 0;
 	protected List<ComboNode> currentCombo;
-
 	
-	public delegate void AnimationFinishedDelegate();
-	public AnimationFinishedDelegate animationFinishedDelegate;
 	public delegate void AIStateChanged(AIStateData newState);
 	public static event AIStateChanged OnAIStateChange;
 	
@@ -56,6 +54,9 @@ public class AIBaseController : BaseController {
 			break;
 		case AIState.Dead:
 			Dead();
+			break;
+		case AIState.Grappled:
+			Grappled();
 			break;
 		}
 		base.Update();
@@ -171,6 +172,28 @@ public class AIBaseController : BaseController {
 		Destroy(this);
 	}
 
+	protected override void Grappled() {
+		//implement grappled rules
+		//take damage count
+	}
+
+	public override void GrappleTarget() {
+		if(target.GetComponent<BaseController>().Grapple(this)) {
+			isGrappling = true;
+			//play grappling anim
+		}
+		else{
+			isGrappling = false;
+			//play grapplefail anim
+		}
+	}
+
+	public override void BreakGrapple() {
+		isGrappled = false;
+		grappledBy = null;
+		currentState = AIState.Fallen;
+	}
+	
 	protected virtual bool ApproachedTargetUntilInRange() {
 		VectorToTarget = vectorToTarget;
 		
@@ -188,13 +211,15 @@ public class AIBaseController : BaseController {
 			tV = VectorToTarget.z;
 			return true;
 		}
-		else {
+		else if(distanceToTarget < midAttackRange) {
 			h = 0;
 			v = 0;
 			tH = h;
 			tV = v;
 			return true;
 		}
+		else
+			return true;
 	}
 	
 	private bool IsInRange() {
@@ -203,6 +228,24 @@ public class AIBaseController : BaseController {
 		else
 			return false;
 	}
+
+	public override bool Grapple(BaseController grappler) {
+		switch(currentState) {
+		case AIState.Dead:
+		case AIState.Dying:
+		case AIState.Fallen:
+		case AIState.Grappled:
+			isGrappled = false;
+			break;
+		default:
+			isGrappled = true;
+			break;
+		}
+		grappledBy = grappler;
+		return isGrappled;
+		
+	}
+
 
 	public virtual void AttackNewTarget(GameObject newTarget) {
 		target = newTarget;
@@ -263,9 +306,6 @@ public class AIBaseController : BaseController {
 
 	}
 
-	public void AnimationFinishedInterface() { //public function so animator can call animationFinishedDelegate
-		animationFinishedDelegate();
-	}
 
 	void OnEnable() {
 		BasePlayerController.OnPlayerEvent += HandlePlayerEvent;

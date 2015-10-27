@@ -9,6 +9,7 @@ public class BasePlayerController : BaseController
     public static event PlayerAction OnPlayerEvent;
 
     public BasePlayerCharacterController character;
+	protected GameObject GrappledTarget;
 
     protected int gamePad;
     protected List<AIBaseController> targetList = new List<AIBaseController>();
@@ -48,34 +49,35 @@ public class BasePlayerController : BaseController
 	{
         PredictAttack();
         SendControllerEvent(ControllerActions.LIGHTATTACK, this);
-        character.LightAttack(isJumping);
+        character.LightAttack(isJumping, animationNumber);
     }
 
 	protected override void HeavyAttack(int animationNumber = 0)
 	{
         PredictAttack();
         SendControllerEvent(ControllerActions.HEAVYATTACK, this);
-        character.HeavyAttack(isJumping);
+		character.HeavyAttack(isJumping, animationNumber);
     }
 
 	protected override void Grab(int animationNumber = 0)
 	{
         PredictAttack();
         SendControllerEvent(ControllerActions.GRAB, this);
-        character.Grab(isJumping);
+		character.Grab(isJumping, animationNumber);
+		animationFinishedDelegate = GrappleTarget;
     }
 
 	protected override void Block(int animationNumber = 0)
 	{
         SendControllerEvent(ControllerActions.BLOCK, this);
-        character.Block(isJumping);
+		character.Block(isJumping, animationNumber);
     }
 
 	protected override void SpecialAction(int animationNumber = 0)
 	{
         PredictAttack();
         SendControllerEvent(ControllerActions.SPECIAL, this);
-        character.SpecialAction(isJumping);
+		character.SpecialAction(isJumping, animationNumber);
     }
 
 	protected override void Jump(int animationNumber = 0)
@@ -83,6 +85,25 @@ public class BasePlayerController : BaseController
         SendControllerEvent(ControllerActions.JUMP, this);    
         base.Jump();
     }
+
+	public override void GrappleTarget() {
+		if(targetList[0].Grapple(this)) {
+			isGrappling = true;
+			GrappledTarget = targetList[0].gameObject;
+			//play grappling anim
+		}
+		else{
+			isGrappling = false;
+			//play grapplefail anim
+		}
+	}
+
+	public override bool Grapple(BaseController grappler){
+		isGrappled = true;
+		grappledBy = grappler;
+		return isGrappled;
+	}
+	
 
     protected virtual void AttackTargetList()
     {
