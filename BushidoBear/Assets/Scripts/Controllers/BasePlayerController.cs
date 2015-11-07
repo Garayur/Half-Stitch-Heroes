@@ -63,8 +63,16 @@ public class BasePlayerController : BaseController
 	{
         PredictAttack();
         SendControllerEvent(ControllerActions.GRAB, this);
+		if(targetList[0].Grapple(this)) {
+			isGrappling = true;
+			GrappledTarget = targetList[0].gameObject;
+			//play grappling anim
+		}
+		else{
+			isGrappling = false;
+			//play grapplefail anim
+		}
 		character.Grab(isJumping, animationNumber);
-		animationFinishedDelegate = GrappleTarget;
     }
 
 	protected override void Block(int animationNumber = 0)
@@ -86,17 +94,6 @@ public class BasePlayerController : BaseController
         base.Jump();
     }
 
-	public override void GrappleTarget() {
-		if(targetList[0].Grapple(this)) {
-			isGrappling = true;
-			GrappledTarget = targetList[0].gameObject;
-			//play grappling anim
-		}
-		else{
-			isGrappling = false;
-			//play grapplefail anim
-		}
-	}
 
 	public override bool Grapple(BaseController grappler){
 		isGrappled = true;

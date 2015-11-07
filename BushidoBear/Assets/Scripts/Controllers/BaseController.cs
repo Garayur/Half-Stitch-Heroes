@@ -50,6 +50,7 @@ public class BaseController : MonoBehaviour
 	protected bool isGrappled;
 	protected bool isGrappling;
 	protected BaseController grappledBy;
+	protected BaseController grappledTarget;
 
     //---------------
     // private
@@ -223,7 +224,15 @@ public class BaseController : MonoBehaviour
     }
 
 	public virtual void BreakGrapple() {
-		isGrappled = false;
+		if(isGrappled) {
+			isGrappled = false;
+			grappledBy = null;
+		}
+		else if(isGrappling){
+			grappledTarget = null;
+			grappledTarget = null;
+		}
+		grappledTarget.BreakGrapple();
 	}
 
 	protected virtual void Grappled() {
@@ -233,7 +242,10 @@ public class BaseController : MonoBehaviour
 		return false;
 	}
 
-	public virtual void GrappleTarget() {
+	public virtual void Thrown(Vector3 direction){
+		BreakGrapple();
+		//apply velocity to self in direction. if side of screen is hit fall down. 
 	}
+
 
 }

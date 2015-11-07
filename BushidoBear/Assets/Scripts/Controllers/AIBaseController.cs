@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public enum AIState {StartingAnimation, Positioning, Attacking, Flinching, Fallen, Dying, Dead, Grappled};
+public enum AIState {StartingAnimation, Positioning, Attacking, Flinching, Fallen, Dying, Dead, Grappled, Grappling};
 
 public class AIBaseController : BaseController {
 
@@ -20,6 +20,7 @@ public class AIBaseController : BaseController {
 	protected Vector3 VectorToTarget;
 	protected float distanceToTarget;
 	protected Vector3 aiMovementVector;
+	protected int grappledHitCount = 0;
 
 	protected int currentComboStep = 0;
 	protected List<ComboNode> currentCombo;
@@ -57,6 +58,9 @@ public class AIBaseController : BaseController {
 			break;
 		case AIState.Grappled:
 			Grappled();
+			break;
+		case AIState.Grappling:
+			Grappling();
 			break;
 		}
 		base.Update();
@@ -173,11 +177,11 @@ public class AIBaseController : BaseController {
 	}
 
 	protected override void Grappled() {
-		//implement grappled rules
-		//take damage count
+		if(grappledHitCount >= 3)
+			BreakGrapple();
 	}
 
-	public override void GrappleTarget() {
+	protected override void Grab(int animationNumber = 0) {
 		if(target.GetComponent<BaseController>().Grapple(this)) {
 			isGrappling = true;
 			//play grappling anim
@@ -186,6 +190,10 @@ public class AIBaseController : BaseController {
 			isGrappling = false;
 			//play grapplefail anim
 		}
+	}
+
+	protected virtual void Grappling(){
+
 	}
 
 	public override void BreakGrapple() {
@@ -242,10 +250,16 @@ public class AIBaseController : BaseController {
 			break;
 		}
 		grappledBy = grappler;
+		grappledHitCount = 0;
 		return isGrappled;
 		
 	}
 
+	public override void Thrown(Vector3 direction){
+		BreakGrapple();
+		currentState = AIState.Fallen;
+		//apply velocity to self in direction. if side of screen is hit fall down. 
+	}
 
 	public virtual void AttackNewTarget(GameObject newTarget) {
 		target = newTarget;
@@ -284,6 +298,10 @@ public class AIBaseController : BaseController {
 			currentState = AIState.Flinching;
 			stateTimer = flinchDuration;
 			SendStateChangeEvent();
+		}
+		if(currentState == AIState.Grappled){
+			if(other == grappledBy)
+				grappledHitCount++;
 		}
 		base.TakeDamage(other, hitPosition, hitDirection, amount);
 	}
