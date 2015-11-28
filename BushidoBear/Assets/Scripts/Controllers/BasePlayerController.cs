@@ -49,14 +49,16 @@ public class BasePlayerController : BaseController
 	{
         PredictAttack();
         SendControllerEvent(ControllerActions.LIGHTATTACK, this);
-        character.LightAttack(isJumping, animationNumber);
+        currentAttackInfo = character.LightAttack(isJumping);
+        print("animation Number being returned:   " + currentAttackInfo.GetAnimationNumber());
+        animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
     }
 
 	protected override void HeavyAttack(int animationNumber = 0)
 	{
         PredictAttack();
         SendControllerEvent(ControllerActions.HEAVYATTACK, this);
-		character.HeavyAttack(isJumping, animationNumber);
+		character.HeavyAttack(isJumping);
     }
 
 	protected override void Grab(int animationNumber = 0)
@@ -72,20 +74,20 @@ public class BasePlayerController : BaseController
 			isGrappling = false;
 			//play grapplefail anim
 		}
-		character.Grab(isJumping, animationNumber);
+		character.Grab(isJumping);
     }
 
 	protected override void Block(int animationNumber = 0)
 	{
         SendControllerEvent(ControllerActions.BLOCK, this);
-		character.Block(isJumping, animationNumber);
+		character.Block(isJumping);
     }
 
 	protected override void SpecialAction(int animationNumber = 0)
 	{
         PredictAttack();
         SendControllerEvent(ControllerActions.SPECIAL, this);
-		character.SpecialAction(isJumping, animationNumber);
+		character.SpecialAction(isJumping);
     }
 
 	protected override void Jump(int animationNumber = 0)

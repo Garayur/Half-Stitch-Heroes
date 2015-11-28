@@ -1,15 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public enum ControllerActions
-{
-    LIGHTATTACK,
-    HEAVYATTACK,
-    BLOCK,
-    GRAB,
-    SPECIAL,
-    JUMP
-};
+public enum ControllerActions { LIGHTATTACK, HEAVYATTACK, BLOCK, GRAB, SPECIAL, JUMP, JUMPINGLIGHTATTACK, JUMPINGHEAVYATTACK };
+public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Fallen, Dying, Dead, Grappled, Grappling };
 
 public class BaseController : MonoBehaviour 
 {
@@ -51,6 +44,7 @@ public class BaseController : MonoBehaviour
 	protected bool isGrappling;
 	protected BaseController grappledBy;
 	protected BaseController grappledTarget;
+    protected AttackInformation currentAttackInfo;
 
     //---------------
     // private
@@ -191,6 +185,38 @@ public class BaseController : MonoBehaviour
 	public void AnimationFinishedInterface() { //public function so animator can call animationFinishedDelegate
 		animationFinishedDelegate();
 	}
+
+    public void EndAnimation()
+    {
+        animator.SetInteger("Action", 0);
+    }
+
+    protected void EventAttack()
+    {
+        Vector3 center = transform.TransformPoint(attackOffset);
+        float radius = attackRadius;
+
+
+        Debug.DrawRay(center, transform.forward, Color.red, 0.5f);
+
+        Collider[] cols = Physics.OverlapSphere(center, radius);
+
+
+        //------------------------
+        //Check Enemy Hit Collider
+        //------------------------
+        foreach (Collider col in cols)
+        {
+            BaseController charControl = col.GetComponent<BaseController>();
+            if (charControl == null)
+                continue;
+
+            if (charControl == this)
+                continue;
+
+            charControl.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage());
+        }
+    }
 
     public virtual void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount)
     {

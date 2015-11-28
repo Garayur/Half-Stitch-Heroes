@@ -2,8 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public enum AIState {StartingAnimation, Positioning, Attacking, Flinching, Fallen, Dying, Dead, Grappled, Grappling};
-
 public class AIBaseController : BaseController {
 
 	public float flinchDuration = 1.0f;
@@ -12,7 +10,7 @@ public class AIBaseController : BaseController {
 	public float midAttackRange = 2.5f;
 	public float minAttackRange = 1.5f;
 	
-	protected AIState currentState;
+	protected ControllerState currentState;
 	protected float stateTimer;
 	protected float targetingTimer = 0;
 	protected GameObject target = null;
@@ -29,37 +27,37 @@ public class AIBaseController : BaseController {
 	public static event AIStateChanged OnAIStateChange;
 	
 	public virtual void Start () {
-		currentState = AIState.StartingAnimation;
+		currentState = ControllerState.StartingAnimation;
 		isRun = true;
 	}
 	
 	protected override void Update () {
 		switch (currentState) {
-		case AIState.StartingAnimation:
+		case ControllerState.StartingAnimation:
 			StartAnimation();
 			break;
-		case AIState.Positioning:
+		case ControllerState.Positioning:
 			Positioning();
 			break;
-		case AIState.Attacking:
+		case ControllerState.Attacking:
 			Attacking();
 			break;
-		case AIState.Flinching:
+		case ControllerState.Flinching:
 			Flinch();
 			break;
-		case AIState.Fallen:
+		case ControllerState.Fallen:
 			Fall();
 			break;
-		case AIState.Dying:
+		case ControllerState.Dying:
 			Dying();
 			break;
-		case AIState.Dead:
+		case ControllerState.Dead:
 			Dead();
 			break;
-		case AIState.Grappled:
+		case ControllerState.Grappled:
 			Grappled();
 			break;
-		case AIState.Grappling:
+		case ControllerState.Grappling:
 			Grappling();
 			break;
 		}
@@ -155,7 +153,7 @@ public class AIBaseController : BaseController {
 	protected virtual void Flinch() {
 		stateTimer -= Time.deltaTime;
 		if(stateTimer <= 0) {
-			currentState = AIState.Positioning;
+			currentState = ControllerState.Positioning;
 			SendStateChangeEvent();
 		}
 	}
@@ -199,7 +197,7 @@ public class AIBaseController : BaseController {
 	public override void BreakGrapple() {
 		isGrappled = false;
 		grappledBy = null;
-		currentState = AIState.Fallen;
+		currentState = ControllerState.Fallen;
 	}
 	
 	protected virtual bool ApproachedTargetUntilInRange() {
@@ -239,10 +237,10 @@ public class AIBaseController : BaseController {
 
 	public override bool Grapple(BaseController grappler) {
 		switch(currentState) {
-		case AIState.Dead:
-		case AIState.Dying:
-		case AIState.Fallen:
-		case AIState.Grappled:
+		case ControllerState.Dead:
+		case ControllerState.Dying:
+		case ControllerState.Fallen:
+		case ControllerState.Grappled:
 			isGrappled = false;
 			break;
 		default:
@@ -257,19 +255,19 @@ public class AIBaseController : BaseController {
 
 	public override void Thrown(Vector3 direction){
 		BreakGrapple();
-		currentState = AIState.Fallen;
+		currentState = ControllerState.Fallen;
 		//apply velocity to self in direction. if side of screen is hit fall down. 
 	}
 
 	public virtual void AttackNewTarget(GameObject newTarget) {
 		target = newTarget;
-		currentState = AIState.Attacking;
+		currentState = ControllerState.Attacking;
 		isRun = true;
 		SendStateChangeEvent();
 	}
 	
 	public virtual bool IsAvailable() {
-		if(currentState == AIState.Positioning || currentState == AIState.StartingAnimation) {
+		if(currentState == ControllerState.Positioning || currentState == ControllerState.StartingAnimation) {
 			return true; }
 		else 
 			return false;
@@ -282,8 +280,8 @@ public class AIBaseController : BaseController {
 	}
 
 	public void StartCombatPositioning(){
-		if(currentState == AIState.StartingAnimation) {
-			currentState = AIState.Positioning;
+		if(currentState == ControllerState.StartingAnimation) {
+			currentState = ControllerState.Positioning;
 			isRun = false;
 			SendStateChangeEvent();
 		}
@@ -291,15 +289,15 @@ public class AIBaseController : BaseController {
 
 
 	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
-		if(currentState == AIState.StartingAnimation) {
+		if(currentState == ControllerState.StartingAnimation) {
 			SendStateChangeEvent();
 		}
-		else if(currentState == AIState.Attacking) {
-			currentState = AIState.Flinching;
+		else if(currentState == ControllerState.Attacking) {
+			currentState = ControllerState.Flinching;
 			stateTimer = flinchDuration;
 			SendStateChangeEvent();
 		}
-		if(currentState == AIState.Grappled){
+		if(currentState == ControllerState.Grappled){
 			if(other == grappledBy)
 				grappledHitCount++;
 		}

@@ -113,24 +113,24 @@ public class AICoordinator : MonoBehaviour {
 		if(AISquad.Contains(aiState.owner)) {
 
 			switch (aiState.state) {
-			case AIState.StartingAnimation:
+			case ControllerState.StartingAnimation:
 				AlertSquad();
 				break;
-			case AIState.Positioning:
+			case ControllerState.Positioning:
 				ReassignAI(aiState.owner, aiState.target);
 				break;
-			case AIState.Attacking:
+			case ControllerState.Attacking:
 				break;
-			case AIState.Flinching:
+			case ControllerState.Flinching:
 				ReassignAI(aiState.owner, aiState.target);
 				break;
-			case AIState.Fallen:
+			case ControllerState.Fallen:
 				ReassignAI(aiState.owner, aiState.target);
 				break;
-			case AIState.Dying:
+			case ControllerState.Dying:
 				ReassignAI(aiState.owner, aiState.target);
 				break;
-			case AIState.Dead:
+			case ControllerState.Dead:
 				AISquad.Remove(aiState.owner);
 				DestroySelfOnSquadDeath();
 				break;

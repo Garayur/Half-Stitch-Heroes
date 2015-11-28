@@ -4,7 +4,7 @@ using System.Collections;
 public class NunchuckWoodchuckController : AIBaseController {
 
 	public override void Start () {
-		currentState = AIState.StartingAnimation;
+		currentState = ControllerState.StartingAnimation;
 		isRun = true;
 		attackFrequency = 1.0f;
 	}

@@ -17,10 +17,10 @@ public class JudoJaguarController : AIBaseController {
 
 	public override bool Grapple(BaseController grappler) { //return false and if possible counter grab. 
 		switch(currentState) {
-		case AIState.Dead:
-		case AIState.Dying:
-		case AIState.Fallen:
-		case AIState.Grappled:
+		case ControllerState.Dead:
+		case ControllerState.Dying:
+		case ControllerState.Fallen:
+		case ControllerState.Grappled:
 			isGrappled = false;
 			break;
 		default:

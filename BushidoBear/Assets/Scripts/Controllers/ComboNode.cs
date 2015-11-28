@@ -28,8 +28,10 @@ public class ComboNode
 
     public bool isMatchingCombo (ControllerActions[] actions)
     {
+        Debug.Log("is this working");
         for (int i = 0; i < actions.Length; i++)
         {
+            Debug.Log("Combo Sequence: " + comboSequence[i] + "\nActions: " + actions[i]);
             if (comboSequence[i] != actions[i])
             {
                 return false;
