@@ -50,7 +50,6 @@ public class BasePlayerController : BaseController
         PredictAttack();
         SendControllerEvent(ControllerActions.LIGHTATTACK, this);
         currentAttackInfo = character.LightAttack(isJumping);
-        print("animation Number being returned:   " + currentAttackInfo.GetAnimationNumber());
         animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
     }
 

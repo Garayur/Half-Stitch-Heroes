@@ -13,7 +13,7 @@ public class BaseController : MonoBehaviour
     public bool enableControl = true;
 
     public float turnSpeed = 10.0f;
-    public float moveSpeed = 5.0f;
+    public float moveSpeed = 2.0f;
     public float runSpeedScale = 2.0f;
 
     public Vector3 attackOffset = Vector3.zero;
@@ -28,9 +28,6 @@ public class BaseController : MonoBehaviour
 
     public string[] damageReaction;
     public Action[] actionList;
-
-	public delegate void AnimationFinishedDelegate();
-	public AnimationFinishedDelegate animationFinishedDelegate;
 
     //---------------
     // protected
@@ -164,9 +161,9 @@ public class BaseController : MonoBehaviour
     //================================================
     //ControllerActions
     //================================================
-    protected virtual void LightAttack(int animationNumber = 0){}
+    protected virtual void LightAttack(int animationNumber = 1){}
 
-	protected virtual void HeavyAttack(int animationNumber = 0){}
+	protected virtual void HeavyAttack(int animationNumber = 1){}
 
 	protected virtual void Block(int animationNumber = 0){}
 
@@ -181,10 +178,6 @@ public class BaseController : MonoBehaviour
             animator.SetTrigger("Jump");
         }
     }
-
-	public void AnimationFinishedInterface() { //public function so animator can call animationFinishedDelegate
-		animationFinishedDelegate();
-	}
 
     public void EndAnimation()
     {

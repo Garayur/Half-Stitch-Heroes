@@ -5,10 +5,10 @@ using System.Collections.Generic;
 public class AIBaseController : BaseController {
 
 	public float flinchDuration = 1.0f;
-	public float attackFrequency = 2.0f;
+	public float attackFrequency = 5.0f;
 	public float maxAttackRange = 3;
-	public float midAttackRange = 2.5f;
-	public float minAttackRange = 1.5f;
+	public float midAttackRange = 2.0f;
+	public float minAttackRange = 1.0f;
 	
 	protected ControllerState currentState;
 	protected float stateTimer;
@@ -25,10 +25,14 @@ public class AIBaseController : BaseController {
 	
 	public delegate void AIStateChanged(AIStateData newState);
 	public static event AIStateChanged OnAIStateChange;
+
+	public delegate void AnimationFinishedDelegate();
+	public AnimationFinishedDelegate animationFinishedDelegate;
 	
 	public virtual void Start () {
 		currentState = ControllerState.StartingAnimation;
 		isRun = true;
+		attackRadius = midAttackRange;
 	}
 	
 	protected override void Update () {
