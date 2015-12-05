@@ -4,9 +4,9 @@ using System.Collections;
 public class AttackInformation
 {
     protected int animationNumber;
-    protected float attackDamage;
+    protected int attackDamage;
 
-    public AttackInformation(int animationNumber, float attackDamage)
+    public AttackInformation(int animationNumber, int attackDamage)
     {
         this.animationNumber = animationNumber;
         this.attackDamage = attackDamage;
@@ -17,7 +17,7 @@ public class AttackInformation
         return animationNumber;
     }
 
-    public float GetAttackDamage ()
+    public int GetAttackDamage ()
     {
         return attackDamage;
     }

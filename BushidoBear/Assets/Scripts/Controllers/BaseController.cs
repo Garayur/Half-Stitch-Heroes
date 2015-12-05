@@ -27,7 +27,6 @@ public class BaseController : MonoBehaviour
     public GameObject m_hitEffect = null;
 
     public string[] damageReaction;
-    public Action[] actionList;
 
 	public delegate void AnimationFinishedDelegate();
 	public AnimationFinishedDelegate animationFinishedDelegate;

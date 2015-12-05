@@ -5,15 +5,22 @@ public class ComboNode
 {
     int length;
     int animationNumber = 0;
+    int damage = 0;
     bool clearsQueue = false;
     ControllerActions[] comboSequence;
 
-    public ComboNode (int length, int animNumber, bool clearsQueue, ControllerActions[] comboList)
+    public ComboNode (int length, int animNumber, int damage, bool clearsQueue, ControllerActions[] comboList)
     {
         this.length = length;
         animationNumber = animNumber;
+        this.damage = damage;
         this.clearsQueue = clearsQueue;
         comboSequence = comboList;
+    }
+
+    public int GetDamage()
+    {
+        return damage;
     }
 
     public int GetAnimation ()

@@ -58,7 +58,9 @@ public class BasePlayerController : BaseController
 	{
         PredictAttack();
         SendControllerEvent(ControllerActions.HEAVYATTACK, this);
-		character.HeavyAttack(isJumping);
+		currentAttackInfo = character.HeavyAttack(isJumping);
+        animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
+        animationFinishedDelegate = EndAnimation;
     }
 
 	protected override void Grab(int animationNumber = 0)
