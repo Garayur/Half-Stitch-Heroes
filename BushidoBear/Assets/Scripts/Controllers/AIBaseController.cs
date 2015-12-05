@@ -20,15 +20,15 @@ public class AIBaseController : BaseController {
 	protected Vector3 aiMovementVector;
 	protected int grappledHitCount = 0;
 
+	protected AttackInformation lightAttackInfo = new AttackInformation(1, 1);
+
 	protected int currentComboStep = 0;
 	protected List<ComboNode> currentCombo;
 	
 	public delegate void AIStateChanged(AIStateData newState);
 	public static event AIStateChanged OnAIStateChange;
 
-	public delegate void AnimationFinishedDelegate();
-	public AnimationFinishedDelegate animationFinishedDelegate;
-	
+
 	public virtual void Start () {
 		currentState = ControllerState.StartingAnimation;
 		isRun = true;
@@ -105,14 +105,16 @@ public class AIBaseController : BaseController {
 	}
 
 	protected virtual void Attack() {
-		animationFinishedDelegate = ResetAttackTimer;
+		ResetAttackTimer();
 	}
 
 	protected void ResetAttackTimer() {
 		stateTimer = attackFrequency;
+		animationFinishedDelegate = EndAnimation;
 	}
 
 	protected void ExecuteCombo(List<ComboNode> comboSequence) {
+		Debug.Log("Execute combo");
 		currentCombo = comboSequence;
 		currentComboStep = 0;
 		ExecuteMove(currentCombo[currentComboStep].GetComboSequence()[0], currentCombo[currentComboStep].GetAnimation());
@@ -120,6 +122,8 @@ public class AIBaseController : BaseController {
 	}
 	
 	protected void ContinueCombo() {
+		Debug.Log("Continue combo");
+		EndAnimation();
 		ExecuteMove(currentCombo[currentComboStep].GetComboSequence()[(currentCombo[currentComboStep].GetComboSequence().Length -1)], currentCombo[currentComboStep].GetAnimation()); //last move in the combo
 			if(currentCombo[currentComboStep].IsLastCombo()) {
 				animationFinishedDelegate = ResetAttackTimer;
@@ -289,6 +293,12 @@ public class AIBaseController : BaseController {
 			isRun = false;
 			SendStateChangeEvent();
 		}
+	}
+
+	protected override void LightAttack(int animationNumber = 1){
+		currentAttackInfo = lightAttackInfo;
+		animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
+		animationFinishedDelegate = EndAnimation; 
 	}
 
 

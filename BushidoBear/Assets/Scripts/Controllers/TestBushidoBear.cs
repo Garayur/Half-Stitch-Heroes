@@ -19,16 +19,13 @@ public class TestBushidoBear : BasePlayerCharacterController
             comboQueue.Enqueue(ControllerActions.LIGHTATTACK);
             if (!ActivateCombo())
             {
-                print("no Combo");
                 return new AttackInformation(1,0.0f);
             }
             else
             {
-                print("Attack");
                 return new AttackInformation(currentAnimationNumber, 1.0f);
             }
         }
-        print("Jumping");
         return new AttackInformation(0, 0.0f);
     }
 
@@ -36,7 +33,6 @@ public class TestBushidoBear : BasePlayerCharacterController
     {
 		currentAnimationNumber = -1;
 
-        print(nodes.Count);
         foreach (ComboNode i in nodes)
         {
             if (i.isMatchingCombo(comboQueue.ToArray()))
@@ -59,13 +55,11 @@ public class TestBushidoBear : BasePlayerCharacterController
     bool ActivateCombo ()
     {
         int length = comboQueue.Count;
-        print("Current Queue " + length);
 		bool isValidCombo = false;
         switch (length)
         {
             case 2:
                 isValidCombo = ComboCheck(twoButtonCombo);
-                print(isValidCombo);
                 break;
             case 3:
 				isValidCombo = ComboCheck(threeButtonCombo);

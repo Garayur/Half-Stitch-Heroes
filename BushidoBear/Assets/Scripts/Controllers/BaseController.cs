@@ -29,6 +29,9 @@ public class BaseController : MonoBehaviour
     public string[] damageReaction;
     public Action[] actionList;
 
+	public delegate void AnimationFinishedDelegate();
+	public AnimationFinishedDelegate animationFinishedDelegate;
+	
     //---------------
     // protected
     //---------------
@@ -64,6 +67,7 @@ public class BaseController : MonoBehaviour
 
         //Run key check
         isRun = true;
+		animationFinishedDelegate = EndAnimation;
     }
 
     protected virtual void Update()
@@ -158,6 +162,11 @@ public class BaseController : MonoBehaviour
         if (isRun == true) speed *= runSpeedScale;
     }
 
+	public void AnimationFinishedInterface() {
+		Debug.Log("Animation Finished");
+		animationFinishedDelegate();
+	}
+
     //================================================
     //ControllerActions
     //================================================
@@ -233,8 +242,11 @@ public class BaseController : MonoBehaviour
 
         //--------------------
         // reaction  
-        string reaction = damageReaction[Random.Range(0, damageReaction.Length)];		// random damage animation test
-        animator.CrossFade(reaction, 0.1f, 0, 0.0f);
+
+		if(damageReaction.Length > 0) {
+        	string reaction = damageReaction[Random.Range(0, damageReaction.Length)];		// random damage animation test
+			animator.CrossFade(reaction, 0.1f, 0, 0.0f);
+		}
 
 
         //--------------------
