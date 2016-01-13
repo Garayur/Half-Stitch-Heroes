@@ -47,7 +47,6 @@ public class AIBaseController : BaseController {
 			Attacking();
 			break;
 		case ControllerState.Flinching:
-			Flinch();
 			break;
 		case ControllerState.Fallen:
 			Fall();
@@ -96,22 +95,16 @@ public class AIBaseController : BaseController {
 		vectorToTarget = target.transform.position - gameObject.transform.position;
 		distanceToTarget = Vector3.Distance(gameObject.transform.position, target.transform.position);
 		
-		if (ApproachedTargetUntilInRange()) {
-			stateTimer -= Time.deltaTime;
-			if(stateTimer <= 0) {
-				Attack();
-			}
-		}
+		ApproachTargetUntilInRange();
 	}
 
-	protected virtual void Attack() {
-		ResetAttackTimer();
-	}
 
-	protected void ResetAttackTimer() {
-		stateTimer = attackFrequency;
-		animationFinishedDelegate = EndAnimation;
+	protected virtual IEnumerator Attack(){
+		yield return new WaitForSeconds(attackFrequency);
+		StartCoroutine("Attack");
+
 	}
+	
 
 	protected void ExecuteCombo(List<ComboNode> comboSequence) {
 		Debug.Log("Execute combo");
@@ -122,11 +115,9 @@ public class AIBaseController : BaseController {
 	}
 	
 	protected void ContinueCombo() {
-		Debug.Log("Continue combo");
-		EndAnimation();
 		ExecuteMove(currentCombo[currentComboStep].GetComboSequence()[(currentCombo[currentComboStep].GetComboSequence().Length -1)], currentCombo[currentComboStep].GetAnimation()); //last move in the combo
-			if(currentCombo[currentComboStep].IsLastCombo()) {
-				animationFinishedDelegate = ResetAttackTimer;
+		if(currentCombo[currentComboStep].IsLastCombo()) {
+			StartCoroutine("Attack");
 		}
 		else{
 			animationFinishedDelegate = ContinueCombo;
@@ -158,12 +149,10 @@ public class AIBaseController : BaseController {
 		}
 	}
 	
-	protected virtual void Flinch() {
-		stateTimer -= Time.deltaTime;
-		if(stateTimer <= 0) {
-			currentState = ControllerState.Positioning;
-			SendStateChangeEvent();
-		}
+	protected virtual IEnumerator Flinch() {
+		yield return new WaitForSeconds(flinchDuration);
+		currentState = ControllerState.Positioning;
+		SendStateChangeEvent();
 	}
 	
 	protected virtual void Fall() {
@@ -181,6 +170,8 @@ public class AIBaseController : BaseController {
 	protected virtual void Dead() {
 		Destroy(this);
 	}
+
+
 
 	protected override void Grappled() {
 		if(grappledHitCount >= 3)
@@ -208,7 +199,7 @@ public class AIBaseController : BaseController {
 		currentState = ControllerState.Fallen;
 	}
 	
-	protected virtual bool ApproachedTargetUntilInRange() {
+	protected virtual void ApproachTargetUntilInRange() {
 		VectorToTarget = vectorToTarget;
 		
 		if(distanceToTarget > maxAttackRange) {
@@ -216,27 +207,22 @@ public class AIBaseController : BaseController {
 			v = VectorToTarget.z;
 			tH = h;
 			tV = v;
-			return false;
 		}
 		else if(distanceToTarget < minAttackRange) {
 			h = -VectorToTarget.x;
 			v = -VectorToTarget.z;
 			tH = VectorToTarget.x;
 			tV = VectorToTarget.z;
-			return true;
 		}
 		else if(distanceToTarget < midAttackRange) {
 			h = 0;
 			v = 0;
 			tH = h;
 			tV = v;
-			return true;
 		}
-		else
-			return true;
 	}
 	
-	private bool IsInRange() {
+	protected bool IsInRange() {
 		if(distanceToTarget < maxAttackRange)
 			return true;
 		else
@@ -270,6 +256,7 @@ public class AIBaseController : BaseController {
 	public virtual void AttackNewTarget(GameObject newTarget) {
 		target = newTarget;
 		currentState = ControllerState.Attacking;
+		StartCoroutine("Attack");
 		isRun = true;
 		SendStateChangeEvent();
 	}
@@ -297,8 +284,10 @@ public class AIBaseController : BaseController {
 
 	protected override void LightAttack(int animationNumber = 1){
 		currentAttackInfo = lightAttackInfo;
-		animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
-		animationFinishedDelegate = EndAnimation; 
+		if(animationNumber == 1)
+			animationNumber = lightAttackInfo.GetAnimationNumber();
+		animator.SetInteger("Action", animationNumber);
+		animationFinishedDelegate = null; 
 	}
 
 
@@ -308,7 +297,8 @@ public class AIBaseController : BaseController {
 		}
 		else if(currentState == ControllerState.Attacking) {
 			currentState = ControllerState.Flinching;
-			stateTimer = flinchDuration;
+			StopCoroutine("Attack");
+			StartCoroutine("Flinch");
 			SendStateChangeEvent();
 		}
 		if(currentState == ControllerState.Grappled){
@@ -334,6 +324,13 @@ public class AIBaseController : BaseController {
 			}
 		}
 
+	}
+
+	public override void EndAnimation(){
+		base.EndAnimation();
+		if(animationFinishedDelegate != null) {
+			animationFinishedDelegate();
+		}
 	}
 
 

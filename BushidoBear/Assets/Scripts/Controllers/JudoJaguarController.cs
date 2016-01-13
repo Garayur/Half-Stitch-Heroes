@@ -10,9 +10,10 @@ public class JudoJaguarController : AIBaseController {
 	}
 
 	//special attack knocks player to ground(leg sweep
-	protected override void Attack() {
-		SpecialAction();
-		base.Attack();
+	protected override IEnumerator Attack() {
+		yield return StartCoroutine(base.Attack());
+		if(IsInRange())
+			SpecialAction();
 	}
 
 	public override bool Grapple(BaseController grappler) { //return false and if possible counter grab. 

@@ -13,10 +13,11 @@ public class NunchuckWoodchuckController : AIBaseController {
 		lightAttackInfo = new AttackInformation(1, 1);
 	}
 
-	protected override void Attack ()
+	protected override IEnumerator Attack ()
 	{
-		LightAttack();
-		base.Attack();
+		yield return StartCoroutine(base.Attack());
+		if(IsInRange())
+			LightAttack();
 	}
 
 }

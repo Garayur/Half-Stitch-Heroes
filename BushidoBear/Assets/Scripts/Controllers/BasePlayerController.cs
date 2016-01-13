@@ -51,7 +51,7 @@ public class BasePlayerController : BaseController
         SendControllerEvent(ControllerActions.LIGHTATTACK, this);
         currentAttackInfo = character.LightAttack(isJumping);
         animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
-		animationFinishedDelegate = EndAnimation;
+		animationFinishedDelegate = null;
     }
 
 	protected override void HeavyAttack(int animationNumber = 0)
@@ -60,7 +60,7 @@ public class BasePlayerController : BaseController
         SendControllerEvent(ControllerActions.HEAVYATTACK, this);
 		currentAttackInfo = character.HeavyAttack(isJumping);
         animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
-        animationFinishedDelegate = EndAnimation;
+        animationFinishedDelegate = null;
     }
 
 	protected override void Grab(int animationNumber = 0)

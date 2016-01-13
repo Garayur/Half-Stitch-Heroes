@@ -66,7 +66,7 @@ public class BaseController : MonoBehaviour
 
         //Run key check
         isRun = true;
-		animationFinishedDelegate = EndAnimation;
+		animationFinishedDelegate = null;
     }
 
     protected virtual void Update()
@@ -161,10 +161,6 @@ public class BaseController : MonoBehaviour
         if (isRun == true) speed *= runSpeedScale;
     }
 
-	public void AnimationFinishedInterface() {
-		Debug.Log("Animation Finished");
-		animationFinishedDelegate();
-	}
 
     //================================================
     //ControllerActions
@@ -187,7 +183,7 @@ public class BaseController : MonoBehaviour
         }
     }
 
-    public void EndAnimation()
+    public virtual void EndAnimation()
     {
         animator.SetInteger("Action", 0);
     }

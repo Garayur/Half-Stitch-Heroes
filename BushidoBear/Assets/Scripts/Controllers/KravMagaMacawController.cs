@@ -19,11 +19,14 @@ public class KravMagaMacawController : AIBaseController {
 	}
 
 	//lots of light attacks, often chained
-	protected override void Attack ()
+	protected override IEnumerator Attack ()
 	{
-		Debug.Log("Krav used Rapid Strike!");
-		ExecuteCombo(rapidStrike);
-		base.Attack();
+		yield return new WaitForSeconds(attackFrequency);
+		if(IsInRange()) {
+			Debug.Log("Krav used Rapid Strike!");
+			ExecuteCombo(rapidStrike);
+		}
 	}
-	
+
+
 }
