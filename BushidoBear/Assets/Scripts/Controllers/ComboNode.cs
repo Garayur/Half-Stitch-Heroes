@@ -36,7 +36,8 @@ public class ComboNode
     public bool isMatchingCombo (ControllerActions[] actions)
     {
         for (int i = 0; i < actions.Length; i++)
-        {
+		{
+			Debug.Log(actions[i]);
             if (comboSequence[i] != actions[i])
             {
                 return false;

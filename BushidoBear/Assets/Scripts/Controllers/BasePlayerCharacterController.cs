@@ -29,6 +29,7 @@ public class BasePlayerCharacterController : MonoBehaviour
             }
             StartCoroutine("ComboTimer");
 
+			Debug.Log("Enqueue light attack");
             comboQueue.Enqueue(ControllerActions.LIGHTATTACK);
             if (!ActivateCombo())
             {
@@ -46,6 +47,13 @@ public class BasePlayerCharacterController : MonoBehaviour
     {
         if (isJumping)
         {
+			if(isTimer)
+			{
+				StopCoroutine("ComboTimer");
+			}
+			StartCoroutine("ComboTimer");
+
+			Debug.Log("Enqueue heavy attack");
             comboQueue.Enqueue(ControllerActions.HEAVYATTACK);
             if (!ActivateCombo())
             {
@@ -79,6 +87,7 @@ public class BasePlayerCharacterController : MonoBehaviour
                 if (i.IsLastCombo())
                 {
                     ClearComboQueue();
+					break;
                 }
             }
         }
@@ -98,6 +107,7 @@ public class BasePlayerCharacterController : MonoBehaviour
     protected bool ActivateCombo()
     {
         int length = comboQueue.Count;
+		Debug.Log(length);
         bool isValidCombo = false;
         switch (length)
         {
@@ -129,6 +139,7 @@ public class BasePlayerCharacterController : MonoBehaviour
     protected void ComboSetUp()
     {
         TwoButtonCombos();
+		ThreeButtonCombos();
     }
 
     protected virtual void TwoButtonCombos() { }
