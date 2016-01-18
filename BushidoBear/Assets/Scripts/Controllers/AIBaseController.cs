@@ -5,14 +5,12 @@ using System.Collections.Generic;
 public class AIBaseController : BaseController {
 
 	public float flinchDuration = 1.0f;
-	public float attackFrequency = 5.0f;
+	public float attackFrequency = 3.0f;
 	public float maxAttackRange = 3;
-	public float midAttackRange = 2.0f;
-	public float minAttackRange = 1.0f;
+	public float midAttackRange = 1.9f;
+	public float minAttackRange = 1.5f;
 	
 	protected ControllerState currentState;
-	protected float stateTimer;
-	protected float targetingTimer = 0;
 	protected GameObject target = null;
 	protected Vector3 vectorToTarget;
 	protected Vector3 VectorToTarget;
@@ -20,7 +18,8 @@ public class AIBaseController : BaseController {
 	protected Vector3 aiMovementVector;
 	protected int grappledHitCount = 0;
 
-	protected AttackInformation lightAttackInfo = new AttackInformation(1, 1);
+	protected AttackInformation lightAttackInfo = new AttackInformation(2, 5);
+	protected AttackInformation heavyAttackInfo = new AttackInformation(1, 10);
 
 	protected int currentComboStep = 0;
 	protected List<ComboNode> currentCombo;
@@ -76,12 +75,7 @@ public class AIBaseController : BaseController {
 	}
 	
 	protected virtual void Positioning() {
-		targetingTimer -= Time.deltaTime;
-
-		if(targetingTimer <= 0) {
-			FindAndAssignFacingTarget();
-			targetingTimer = 1.0f;
-		}
+		StartCoroutine(FindAndAssignFacingTarget());
 
 		h = aiMovementVector.x;
 		v = aiMovementVector.z;
@@ -102,15 +96,13 @@ public class AIBaseController : BaseController {
 	protected virtual IEnumerator Attack(){
 		yield return new WaitForSeconds(attackFrequency);
 		StartCoroutine("Attack");
-
 	}
 	
 
 	protected void ExecuteCombo(List<ComboNode> comboSequence) {
-		Debug.Log("Execute combo");
 		currentCombo = comboSequence;
 		currentComboStep = 0;
-		ExecuteMove(currentCombo[currentComboStep].GetComboSequence()[0], currentCombo[currentComboStep].GetAnimation());
+		ExecuteMove(currentCombo[currentComboStep].GetComboSequence()[0], -1);
 		animationFinishedDelegate = ContinueCombo;
 	}
 	
@@ -118,6 +110,7 @@ public class AIBaseController : BaseController {
 		ExecuteMove(currentCombo[currentComboStep].GetComboSequence()[(currentCombo[currentComboStep].GetComboSequence().Length -1)], currentCombo[currentComboStep].GetAnimation()); //last move in the combo
 		if(currentCombo[currentComboStep].IsLastCombo()) {
 			StartCoroutine("Attack");
+			animationFinishedDelegate = null;
 		}
 		else{
 			animationFinishedDelegate = ContinueCombo;
@@ -126,6 +119,7 @@ public class AIBaseController : BaseController {
 			
 	}
 
+	//animationNumber == -1 results in default animation
 	protected void ExecuteMove(ControllerActions action, int animationNumber){
 		switch(action) {
 		case ControllerActions.BLOCK:
@@ -148,11 +142,30 @@ public class AIBaseController : BaseController {
 			break;
 		}
 	}
-	
-	protected virtual IEnumerator Flinch() {
-		yield return new WaitForSeconds(flinchDuration);
+
+	protected override void Flinch(){
+		switch(currentState)
+		{
+		case ControllerState.Positioning:
+		case ControllerState.Attacking:
+			currentState = ControllerState.Flinching;
+			StopAllCoroutines();
+			animationFinishedDelegate = EndFlinch;
+			SendStateChangeEvent();
+			animator.SetInteger("Action", 6);
+			h = 0;
+			v = 0;
+			break;
+		case ControllerState.Flinching:
+			break;
+		}
+	}
+
+	protected virtual void EndFlinch() {
+		Debug.Log("endflinch");
 		currentState = ControllerState.Positioning;
 		SendStateChangeEvent();
+		animationFinishedDelegate = null;
 	}
 	
 	protected virtual void Fall() {
@@ -256,6 +269,7 @@ public class AIBaseController : BaseController {
 	public virtual void AttackNewTarget(GameObject newTarget) {
 		target = newTarget;
 		currentState = ControllerState.Attacking;
+		StopAllCoroutines();
 		StartCoroutine("Attack");
 		isRun = true;
 		SendStateChangeEvent();
@@ -275,6 +289,7 @@ public class AIBaseController : BaseController {
 	}
 
 	public void StartCombatPositioning(){
+		Debug.Log("star combat positioning");
 		if(currentState == ControllerState.StartingAnimation) {
 			currentState = ControllerState.Positioning;
 			isRun = false;
@@ -282,12 +297,18 @@ public class AIBaseController : BaseController {
 		}
 	}
 
-	protected override void LightAttack(int animationNumber = 1){
+	protected override void LightAttack(int animationNumber = -1){
 		currentAttackInfo = lightAttackInfo;
-		if(animationNumber == 1)
+		if(animationNumber < 0)
 			animationNumber = lightAttackInfo.GetAnimationNumber();
+		animator.SetInteger("Action", animationNumber); 
+	}
+
+	protected override void HeavyAttack(int animationNumber = -1){
+		currentAttackInfo = heavyAttackInfo;
+		if(animationNumber < 0)
+			animationNumber = heavyAttackInfo.GetAnimationNumber();
 		animator.SetInteger("Action", animationNumber);
-		animationFinishedDelegate = null; 
 	}
 
 
@@ -295,16 +316,12 @@ public class AIBaseController : BaseController {
 		if(currentState == ControllerState.StartingAnimation) {
 			SendStateChangeEvent();
 		}
-		else if(currentState == ControllerState.Attacking) {
-			currentState = ControllerState.Flinching;
-			StopCoroutine("Attack");
-			StartCoroutine("Flinch");
-			SendStateChangeEvent();
-		}
+
 		if(currentState == ControllerState.Grappled){
 			if(other == grappledBy)
 				grappledHitCount++;
 		}
+		Flinch();
 		base.TakeDamage(other, hitPosition, hitDirection, amount);
 	}
 
@@ -312,10 +329,9 @@ public class AIBaseController : BaseController {
 		aiMovementVector = newMovementVector;
 	}
 
-	protected void FindAndAssignFacingTarget() {
+	protected IEnumerator FindAndAssignFacingTarget() {
 		float shortestDistanceToPlayer = 100;
 		float distanceToPlayer = 0;
-
 		foreach(GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
 			distanceToPlayer = Vector3.Distance(player.transform.position, gameObject.transform.position);
 			if(distanceToPlayer < shortestDistanceToPlayer) {
@@ -323,7 +339,9 @@ public class AIBaseController : BaseController {
 				target = player;
 			}
 		}
+		yield return new WaitForSeconds(1.0f);
 
+		StartCoroutine(FindAndAssignFacingTarget());
 	}
 
 	public override void EndAnimation(){

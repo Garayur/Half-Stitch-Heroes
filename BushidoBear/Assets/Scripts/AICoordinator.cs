@@ -19,6 +19,9 @@ public class AICoordinator : MonoBehaviour {
 	public int zmin = -5;
 	public int zmax = 15;
 
+	//temp destroy with ontriggerenter when box is no longer being used to trigger begincombat
+	protected bool hasBeenTriggered = false;
+
 	protected void OnEnable() {
 		AIBaseController.OnAIStateChange += CheckSquadAssignments;
 	}
@@ -28,7 +31,10 @@ public class AICoordinator : MonoBehaviour {
 	}
 
 	void OnTriggerEnter(Collider other){
-		BeginCombat();
+		if(!hasBeenTriggered){
+			hasBeenTriggered = true;
+			BeginCombat();
+		}
 	}
 
 	void Start() {

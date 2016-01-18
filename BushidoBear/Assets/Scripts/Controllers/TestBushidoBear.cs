@@ -15,14 +15,14 @@ public class TestBushidoBear : BasePlayerCharacterController
     
     protected override void TwoButtonCombos()
     {
-     //   base.twoButtonCombo.Add(new ComboNode(2, 4, 10, true,
-       //     new ControllerActions[] { ControllerActions.LIGHTATTACK, ControllerActions.HEAVYATTACK }));
+        base.twoButtonCombo.Add(new ComboNode(2, 4, 10, true,
+            new ControllerActions[] { ControllerActions.LIGHTATTACK, ControllerActions.HEAVYATTACK }));
 
         base.twoButtonCombo.Add(new ComboNode(2, 3, 10, false,
             new ControllerActions[] { ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK }));
 
-        //base.twoButtonCombo.Add(new ComboNode(2, 4, 10, true,
-          //          new ControllerActions[] { ControllerActions.HEAVYATTACK, ControllerActions.HEAVYATTACK }));
+        base.twoButtonCombo.Add(new ComboNode(2, 4, 10, true,
+                    new ControllerActions[] { ControllerActions.HEAVYATTACK, ControllerActions.HEAVYATTACK }));
     }
 
 	protected override void ThreeButtonCombos() {

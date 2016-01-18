@@ -243,11 +243,14 @@ public class BaseController : MonoBehaviour
 			animator.CrossFade(reaction, 0.1f, 0, 0.0f);
 		}
 
+		Flinch();
 
         //--------------------
         // hitFX 
         GameObject.Instantiate(m_hitEffect, hitPosition, Quaternion.identity);
     }
+
+	protected virtual void Flinch(){}
 
 	public virtual void BreakGrapple() {
 		if(isGrappled) {
