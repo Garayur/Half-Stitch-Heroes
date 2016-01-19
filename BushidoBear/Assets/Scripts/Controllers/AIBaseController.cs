@@ -6,6 +6,7 @@ public class AIBaseController : BaseController {
 
 	public float flinchDuration = 1.0f;
 	public float attackFrequency = 3.0f;
+	public float deadDuration = 3.0f;
 	public float maxAttackRange = 3;
 	public float midAttackRange = 1.9f;
 	public float minAttackRange = 1.5f;
@@ -17,6 +18,7 @@ public class AIBaseController : BaseController {
 	protected float distanceToTarget;
 	protected Vector3 aiMovementVector;
 	protected int grappledHitCount = 0;
+	protected float deadTimer;
 
 	protected AttackInformation lightAttackInfo = new AttackInformation(2, 5);
 	protected AttackInformation heavyAttackInfo = new AttackInformation(1, 10);
@@ -45,22 +47,16 @@ public class AIBaseController : BaseController {
 		case ControllerState.Attacking:
 			Attacking();
 			break;
-		case ControllerState.Flinching:
-			break;
 		case ControllerState.Fallen:
 			Fall();
-			break;
-		case ControllerState.Dying:
-			Dying();
-			break;
-		case ControllerState.Dead:
-			Dead();
 			break;
 		case ControllerState.Grappled:
 			Grappled();
 			break;
 		case ControllerState.Grappling:
 			Grappling();
+			break;
+		default:
 			break;
 		}
 		base.Update();
@@ -140,6 +136,8 @@ public class AIBaseController : BaseController {
 		case ControllerActions.SPECIAL:
 			SpecialAction(animationNumber);
 			break;
+		default:
+			break;
 		}
 	}
 
@@ -162,7 +160,6 @@ public class AIBaseController : BaseController {
 	}
 
 	protected virtual void EndFlinch() {
-		Debug.Log("endflinch");
 		currentState = ControllerState.Positioning;
 		SendStateChangeEvent();
 		animationFinishedDelegate = null;
@@ -174,14 +171,27 @@ public class AIBaseController : BaseController {
 		SendStateChangeEvent();
 	}
 	
-	protected virtual void Dying() {
-		//playing dying animations
-
-		SendStateChangeEvent();
+	protected override void BeginDeath() {
+		if(currentState != ControllerState.Dying || currentState != ControllerState.Dead) {
+			currentState = ControllerState.Dying;
+			animator.SetInteger("Action", 7);
+			h = 0;
+			v = 0;
+			animationFinishedDelegate = Dying;
+			deadTimer = deadDuration;
+			SendStateChangeEvent(); 
+		}
 	}
 
-	protected virtual void Dead() {
-		Destroy(this);
+	protected virtual void Dying(){
+		StartCoroutine("Dead");
+	}
+
+	protected IEnumerator Dead() {
+		currentState = ControllerState.Dead;
+		SendStateChangeEvent();
+		yield return new WaitForSeconds(deadTimer);
+		Destroy(gameObject);
 	}
 
 
@@ -289,7 +299,6 @@ public class AIBaseController : BaseController {
 	}
 
 	public void StartCombatPositioning(){
-		Debug.Log("star combat positioning");
 		if(currentState == ControllerState.StartingAnimation) {
 			currentState = ControllerState.Positioning;
 			isRun = false;
@@ -345,9 +354,11 @@ public class AIBaseController : BaseController {
 	}
 
 	public override void EndAnimation(){
-		base.EndAnimation();
-		if(animationFinishedDelegate != null) {
-			animationFinishedDelegate();
+		if(currentState != ControllerState.Dying || currentState != ControllerState.Dead) {
+			base.EndAnimation();
+			if(animationFinishedDelegate != null) {
+				animationFinishedDelegate();
+			}
 		}
 	}
 
@@ -381,6 +392,8 @@ public class AIBaseController : BaseController {
 				break;
 			case ControllerActions.SPECIAL:
 				TargetSpecialAttacking();
+				break;
+			default:
 				break;
 			}
 		}

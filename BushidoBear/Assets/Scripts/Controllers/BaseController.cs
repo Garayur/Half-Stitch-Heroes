@@ -219,7 +219,7 @@ public class BaseController : MonoBehaviour
     {
         if ((health -= amount) < 0)
         {
-            //Death();
+			BeginDeath();
             print("Ya dead son");
         }
 
@@ -251,6 +251,8 @@ public class BaseController : MonoBehaviour
     }
 
 	protected virtual void Flinch(){}
+
+	protected virtual void BeginDeath(){}
 
 	public virtual void BreakGrapple() {
 		if(isGrappled) {
