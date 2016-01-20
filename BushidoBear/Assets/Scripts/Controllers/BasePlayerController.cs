@@ -10,7 +10,7 @@ public class BasePlayerController : BaseController
 
     public BasePlayerCharacterController character;
 	protected GameObject GrappledTarget;
-
+    protected bool acceptAttackInput = true;
     protected int gamePad;
     protected List<AIBaseController> targetList = new List<AIBaseController>();
 
@@ -47,34 +47,45 @@ public class BasePlayerController : BaseController
     //============================================
 	protected override void LightAttack(int animationNumber = 0)
 	{
-        PredictAttack();
-        SendControllerEvent(ControllerActions.LIGHTATTACK, this);
-        currentAttackInfo = character.LightAttack(isJumping);
-        animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
+        if (acceptAttackInput)
+        {
+            PredictAttack();
+            SendControllerEvent(ControllerActions.LIGHTATTACK, this);
+            currentAttackInfo = character.LightAttack(isJumping);
+            animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
+        }
     }
 
 	protected override void HeavyAttack(int animationNumber = 0)
 	{
-        PredictAttack();
-        SendControllerEvent(ControllerActions.HEAVYATTACK, this);
-		currentAttackInfo = character.HeavyAttack(isJumping);
-        animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
+        if (acceptAttackInput)
+        {
+            PredictAttack();
+            SendControllerEvent(ControllerActions.HEAVYATTACK, this);
+            currentAttackInfo = character.HeavyAttack(isJumping);
+            animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber()); 
+        }
     }
 
 	protected override void Grab(int animationNumber = 0)
 	{
-        PredictAttack();
-        SendControllerEvent(ControllerActions.GRAB, this);
-		if(targetList[0].Grapple(this)) {
-			isGrappling = true;
-			GrappledTarget = targetList[0].gameObject;
-			//play grappling anim
-		}
-		else{
-			isGrappling = false;
-			//play grapplefail anim
-		}
-		character.Grab(isJumping);
+        if (acceptAttackInput)
+        {
+            PredictAttack();
+            SendControllerEvent(ControllerActions.GRAB, this);
+            if (targetList[0].Grapple(this))
+            {
+                isGrappling = true;
+                GrappledTarget = targetList[0].gameObject;
+                //play grappling anim
+            }
+            else
+            {
+                isGrappling = false;
+                //play grapplefail anim
+            }
+            character.Grab(isJumping); 
+        }
     }
 
 	protected override void Block(int animationNumber = 0)
