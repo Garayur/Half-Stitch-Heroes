@@ -3,8 +3,9 @@ using System.Collections;
 
 public class PlayerOneController : BasePlayerController
 {
-	void Start()
+	public override void Start()
 	{
+		base.Start();
 		gamePad = 1;
 	}
 }

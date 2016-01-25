@@ -4,8 +4,9 @@ using System.Collections;
 public class PlayerTwoController : BasePlayerController 
 {
     
-    void Start()
+    public override void Start()
     {
+		base.Start();
         gamePad = 2;
     }
 

@@ -11,33 +11,66 @@ public class BasePlayerController : BaseController
     public BasePlayerCharacterController character;
 	protected GameObject GrappledTarget;
     protected bool acceptAttackInput = true;
+	protected bool isLeftTriggerPressed =  false;
+	protected bool isRightTriggerPressed = false;
     protected int gamePad;
     protected List<AIBaseController> targetList = new List<AIBaseController>();
 
     private int actionValue;
 
+	public virtual void Start() {
+		currentState = ControllerState.Attacking;
+	}
+
     override protected void Update()
     {
-        h = Input.GetAxisRaw("HorizontalP" + gamePad);
-        v = Input.GetAxisRaw("VerticalP" + gamePad);
+		if(currentState == ControllerState.Grappling) {
+			if(Input.GetKeyDown("joystick " + gamePad + " button 2")) {
+				HitGrappleTarget();
+			}
 
-        tH = h;
-        tV = v;
+			if(Input.GetKeyDown("joystick " + gamePad + " button 3")) {
+				ThrowGrapple();
+			}
 
-        if (Input.GetKeyDown("joystick " + gamePad + " button 0"))
-        {
-            Jump();
-        }
+		}
+		else if(currentState == ControllerState.Grappled) {
 
-        if (Input.GetKeyDown("joystick " + gamePad + " button 2"))
-        {
-            LightAttack();
-        }
+		}
+		else{
+	        h = Input.GetAxisRaw("HorizontalP" + gamePad);
+	        v = Input.GetAxisRaw("VerticalP" + gamePad);
 
-        if (Input.GetKeyDown("joystick " + gamePad + " button 3"))
-        {
-            HeavyAttack();
-        }
+	        tH = h;
+	        tV = v;
+
+	        if (Input.GetKeyDown("joystick " + gamePad + " button 0"))
+	        {
+	            Jump();
+	        }
+
+	        if (Input.GetKeyDown("joystick " + gamePad + " button 2"))
+	        {
+	            LightAttack();
+	        }
+
+	        if (Input.GetKeyDown("joystick " + gamePad + " button 3"))
+	        {
+	            HeavyAttack();
+	        }
+
+			if (Input.GetAxis("LTP" + gamePad) > 0)
+			{
+				if(!isLeftTriggerPressed) {
+					isLeftTriggerPressed = true;
+					Grab();
+				}
+			}
+			else
+			{
+				isLeftTriggerPressed = false;
+			}
+		}
 
         base.Update();
     }
@@ -67,26 +100,15 @@ public class BasePlayerController : BaseController
         }
     }
 
-	protected override void Grab(int animationNumber = 0)
-	{
-        if (acceptAttackInput)
-        {
-            PredictAttack();
-            SendControllerEvent(ControllerActions.GRAB, this);
-            if (targetList[0].Grapple(this))
-            {
-                isGrappling = true;
-                GrappledTarget = targetList[0].gameObject;
-                //play grappling anim
-            }
-            else
-            {
-                isGrappling = false;
-                //play grapplefail anim
-            }
-            character.Grab(isJumping); 
-        }
-    }
+	protected virtual void Grab(int animationNumber = 8){
+		base.Grab(animationNumber);
+		SendControllerEvent(ControllerActions.GRAB, this);
+	}
+
+	protected override void HitGrappleTarget(int animationNumber = 2) {
+		currentAttackInfo = character.HitGrappleTarget();
+		animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
+	}
 
 	protected override void Block(int animationNumber = 0)
 	{
@@ -106,14 +128,31 @@ public class BasePlayerController : BaseController
         SendControllerEvent(ControllerActions.JUMP, this);    
         base.Jump();
     }
-
-
-	public override bool Grapple(BaseController grappler){
-		isGrappled = true;
-		grappledBy = grappler;
-		return isGrappled;
-	}
 	
+	public override void BreakGrapple(){
+		base.BreakGrapple();
+		currentState = ControllerState.Attacking;
+	}
+
+	public virtual void ThrowGrapple(){
+		grappleTarget.BreakGrapple();
+		BreakGrapple();
+		Debug.Log("Thrown");
+		//apply velocity to self in direction. if side of screen is hit fall down. 
+	}
+
+	public override bool GetGrabbed(BaseController grappler){
+		switch(currentState) {
+		case ControllerState.Dead:
+		case ControllerState.Dying:
+		case ControllerState.Fallen:
+		case ControllerState.Grappled:
+			return false;
+		default:
+			BeginGrappled(grappler);
+			return true;
+		}
+	}
 
     protected virtual void AttackTargetList()
     {

@@ -39,11 +39,10 @@ public class BaseController : MonoBehaviour
     protected bool isJumping = false;
     protected float moveSpeedScale = 1.0f;
     protected float h, v, tH, tV;
-	protected bool isGrappled;
-	protected bool isGrappling;
 	protected BaseController grappledBy;
-	protected BaseController grappledTarget;
+	protected BaseController grappleTarget;
     protected AttackInformation currentAttackInfo;
+	protected ControllerState currentState;
 
     //---------------
     // private
@@ -173,7 +172,67 @@ public class BaseController : MonoBehaviour
 
 	protected virtual void SpecialAction(int animationNumber = 0){}
 
-	protected virtual void Grab(int animationNumber = 0){}
+	protected virtual void Grab(int animationNumber = 8){
+		Debug.Log("Grab");
+		Vector3 center = transform.TransformPoint(attackOffset);
+		float radius = attackRadius;
+
+		
+		Collider[] cols = Physics.OverlapSphere(center, radius);
+
+		foreach (Collider col in cols)
+		{
+			BaseController charControl = col.GetComponent<BaseController>();
+			if (charControl == null)
+				continue;
+			
+			if (charControl == this)
+				continue;
+			
+			if(charControl.GetGrabbed(this)) {
+				BeginGrappling(charControl);
+			}
+			break;
+		}
+		animator.SetInteger("Action", 8);
+
+	}
+
+	protected virtual void HitGrappleTarget(int animationNumber = 2) {
+	}
+
+	protected virtual void Grappled() {
+	}
+	
+	
+	public virtual bool GetGrabbed(BaseController grappler){
+		return true;
+	}
+
+	protected virtual void BeginGrappling(BaseController target){
+		currentState = ControllerState.Grappling;
+		grappleTarget = target;
+		animator.SetBool("Grappling", true);
+		h = 0;
+		v = 0;
+	}
+	
+	protected virtual void BeginGrappled(BaseController grappler) {
+		currentState = ControllerState.Grappled;
+		grappledBy = grappler;
+		animator.SetBool("Grappled", true);
+		h = 0;
+		v = 0;
+		
+	}
+
+	public virtual void BreakGrapple() {
+		animator.SetBool("Grappling", false);
+		animator.SetBool("Grappled", false);
+		animator.SetInteger("Action", 0);
+		grappledBy = null;
+		grappleTarget = null;
+	}
 
 	protected virtual void Jump(int animationNumber = 0)
 	{
@@ -193,31 +252,36 @@ public class BaseController : MonoBehaviour
         Vector3 center = transform.TransformPoint(attackOffset);
         float radius = attackRadius;
 
+		if(currentState == ControllerState.Grappling) {
+			Debug.Log(grappleTarget);
+			grappleTarget.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage());
+		}
+		else {
+	       // Debug.DrawRay(center, transform.forward, Color.red, 3.5f);
 
-        Debug.DrawRay(center, transform.forward, Color.red, 0.5f);
-
-        Collider[] cols = Physics.OverlapSphere(center, radius);
+	        Collider[] cols = Physics.OverlapSphere(center, radius);
 
 
-        //------------------------
-        //Check Enemy Hit Collider
-        //------------------------
-        foreach (Collider col in cols)
-        {
-            BaseController charControl = col.GetComponent<BaseController>();
-            if (charControl == null)
-                continue;
+	        //------------------------
+	        //Check Enemy Hit Collider
+	        //------------------------
+	        foreach (Collider col in cols)
+	        {
+	            BaseController charControl = col.GetComponent<BaseController>();
+	            if (charControl == null)
+	                continue;
 
-            if (charControl == this)
-                continue;
+	            if (charControl == this)
+	                continue;
 
-            charControl.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage());
-        }
+	            charControl.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage());
+	        }
+		}
     }
 
     public virtual void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount)
     {
-        if ((health -= amount) < 0)
+        if ((health -= amount) <= 0)
         {
 			BeginDeath();
             print("Ya dead son");
@@ -253,30 +317,7 @@ public class BaseController : MonoBehaviour
 	protected virtual void Flinch(){}
 
 	protected virtual void BeginDeath(){}
-
-	public virtual void BreakGrapple() {
-		if(isGrappled) {
-			isGrappled = false;
-			grappledBy = null;
-		}
-		else if(isGrappling){
-			grappledTarget = null;
-			grappledTarget = null;
-		}
-		grappledTarget.BreakGrapple();
-	}
-
-	protected virtual void Grappled() {
-	}
-
-	public virtual bool Grapple(BaseController grappler) {
-		return false;
-	}
-
-	public virtual void Thrown(Vector3 direction){
-		BreakGrapple();
-		//apply velocity to self in direction. if side of screen is hit fall down. 
-	}
+	
 
 
 }

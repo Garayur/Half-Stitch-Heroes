@@ -10,8 +10,7 @@ public class AIBaseController : BaseController {
 	public float maxAttackRange = 3;
 	public float midAttackRange = 1.9f;
 	public float minAttackRange = 1.5f;
-	
-	protected ControllerState currentState;
+
 	protected GameObject target = null;
 	protected Vector3 vectorToTarget;
 	protected Vector3 VectorToTarget;
@@ -22,6 +21,7 @@ public class AIBaseController : BaseController {
 
 	protected AttackInformation lightAttackInfo = new AttackInformation(2, 5);
 	protected AttackInformation heavyAttackInfo = new AttackInformation(1, 10);
+	protected AttackInformation grapplePunchAttackInfo = new AttackInformation(2, 5);
 
 	protected int currentComboStep = 0;
 	protected List<ComboNode> currentCombo;
@@ -197,19 +197,12 @@ public class AIBaseController : BaseController {
 
 
 	protected override void Grappled() {
-		if(grappledHitCount >= 3)
+		if(grappledHitCount >= 3) {
+			grappledBy.BreakGrapple();
 			BreakGrapple();
-	}
+		}
 
-	protected override void Grab(int animationNumber = 0) {
-		if(target.GetComponent<BaseController>().Grapple(this)) {
-			isGrappling = true;
-			//play grappling anim
-		}
-		else{
-			isGrappling = false;
-			//play grapplefail anim
-		}
+
 	}
 
 	protected virtual void Grappling(){
@@ -217,9 +210,29 @@ public class AIBaseController : BaseController {
 	}
 
 	public override void BreakGrapple() {
-		isGrappled = false;
-		grappledBy = null;
-		currentState = ControllerState.Fallen;
+		base.BreakGrapple();
+		currentState = ControllerState.Positioning;
+
+	}
+
+	public override bool GetGrabbed(BaseController grappler){
+		switch(currentState) {
+		case ControllerState.Dead:
+		case ControllerState.Dying:
+		case ControllerState.Fallen:
+		case ControllerState.Grappled:
+			return false;
+		default:
+			BeginGrappled(grappler);
+			return true;
+		}
+	}
+
+	protected virtual IEnumerator ThrowGrapple(){
+		yield return new WaitForSeconds(0.5f);
+		grappleTarget.BreakGrapple();
+		BreakGrapple();
+		Debug.Log("Thrown");
 	}
 	
 	protected virtual void ApproachTargetUntilInRange() {
@@ -252,29 +265,6 @@ public class AIBaseController : BaseController {
 			return false;
 	}
 
-	public override bool Grapple(BaseController grappler) {
-		switch(currentState) {
-		case ControllerState.Dead:
-		case ControllerState.Dying:
-		case ControllerState.Fallen:
-		case ControllerState.Grappled:
-			isGrappled = false;
-			break;
-		default:
-			isGrappled = true;
-			break;
-		}
-		grappledBy = grappler;
-		grappledHitCount = 0;
-		return isGrappled;
-		
-	}
-
-	public override void Thrown(Vector3 direction){
-		BreakGrapple();
-		currentState = ControllerState.Fallen;
-		//apply velocity to self in direction. if side of screen is hit fall down. 
-	}
 
 	public virtual void AttackNewTarget(GameObject newTarget) {
 		target = newTarget;
@@ -317,6 +307,13 @@ public class AIBaseController : BaseController {
 		currentAttackInfo = heavyAttackInfo;
 		if(animationNumber < 0)
 			animationNumber = heavyAttackInfo.GetAnimationNumber();
+		animator.SetInteger("Action", animationNumber);
+	}
+
+	protected override void HitGrappleTarget(int animationNumber = -1) {
+		currentAttackInfo = grapplePunchAttackInfo;
+		if(animationNumber < 0)
+			animationNumber = grapplePunchAttackInfo.GetAnimationNumber();
 		animator.SetInteger("Action", animationNumber);
 	}
 

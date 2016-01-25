@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class JudoJaguarController : AIBaseController {
@@ -16,25 +16,25 @@ public class JudoJaguarController : AIBaseController {
 			SpecialAction();
 	}
 
-	public override bool Grapple(BaseController grappler) { //return false and if possible counter grab. 
+	public override bool GetGrabbed(BaseController grappler){
 		switch(currentState) {
 		case ControllerState.Dead:
 		case ControllerState.Dying:
 		case ControllerState.Fallen:
 		case ControllerState.Grappled:
-			isGrappled = false;
-			break;
+			return false;
+		case ControllerState.Positioning:
+		case ControllerState.Attacking:
+			if(grappler.GetGrabbed(this)) {
+				BeginGrappling(grappler);
+				Debug.Log("Counter Grapple");
+				StartCoroutine("ThrowGrapple");
+			}
+			return false;
 		default:
-			isGrappled = false;
-			target = grappler.gameObject;
-			Grab();
-			//Grapple grappler //face target and grapple. 
-			break;
+			BeginGrappled(grappler);
+			return true;
 		}
-		return isGrappled;
 	}
-
-	protected override void Grappling(){
-		//throw grappled target
-	}
+	
 }
