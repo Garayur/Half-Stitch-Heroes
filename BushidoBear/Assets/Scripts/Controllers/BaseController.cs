@@ -2,7 +2,7 @@
 using System.Collections;
 
 public enum ControllerActions { LIGHTATTACK, HEAVYATTACK, BLOCK, GRAB, SPECIAL, JUMP, JUMPINGLIGHTATTACK, JUMPINGHEAVYATTACK };
-public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Fallen, Dying, Dead, Grappled, Grappling };
+public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Prone, Dying, Dead, Grappled, Grappling, thrown };
 
 public class BaseController : MonoBehaviour 
 {
@@ -39,10 +39,12 @@ public class BaseController : MonoBehaviour
     protected bool isJumping = false;
     protected float moveSpeedScale = 1.0f;
     protected float h, v, tH, tV;
-	protected BaseController grappledBy;
-	protected BaseController grappleTarget;
     protected AttackInformation currentAttackInfo;
 	protected ControllerState currentState;
+
+	protected BaseController grappledBy;
+	protected BaseController grappleTarget;
+	protected Vector3 throwForce;
 
     //---------------
     // private
@@ -172,6 +174,20 @@ public class BaseController : MonoBehaviour
 
 	protected virtual void SpecialAction(int animationNumber = 0){}
 
+	protected virtual void Jump(int animationNumber = 0)
+	{
+		if (charController.isGrounded)
+		{
+			animator.SetTrigger("Jump");
+		}
+	}
+
+
+	//================================================
+	//Grappling functions
+	//================================================
+
+
 	protected virtual void Grab(int animationNumber = 8){
 		Debug.Log("Grab");
 		Vector3 center = transform.TransformPoint(attackOffset);
@@ -215,6 +231,15 @@ public class BaseController : MonoBehaviour
 		animator.SetBool("Grappling", true);
 		h = 0;
 		v = 0;
+
+		if (tH > 0) {
+			tH = 1;
+			tV = 0;
+		}
+		else {
+			tH = -1;
+			tV = 0;
+		}
 	}
 	
 	protected virtual void BeginGrappled(BaseController grappler) {
@@ -223,24 +248,53 @@ public class BaseController : MonoBehaviour
 		animator.SetBool("Grappled", true);
 		h = 0;
 		v = 0;
-		
+
+		if (Vector3.Normalize(grappledBy.transform.position - gameObject.transform.position).x > 0) {
+			tH = 1;
+			tV = 0;
+			gameObject.transform.position = grappledBy.gameObject.transform.position + new Vector3(-1.5f, 0, 0);
+		}
+		else {
+			tH = -1;
+			tV = 0;
+			gameObject.transform.position = grappledBy.gameObject.transform.position + new Vector3(1.5f, 0, 0);
+		}
+
 	}
 
 	public virtual void BreakGrapple() {
 		animator.SetBool("Grappling", false);
 		animator.SetBool("Grappled", false);
 		animator.SetInteger("Action", 0);
-		grappledBy = null;
-		grappleTarget = null;
 	}
 
-	protected virtual void Jump(int animationNumber = 0)
-	{
-        if (charController.isGrounded)
-        {
-            animator.SetTrigger("Jump");
-        }
-    }
+	public virtual void ThrowGrapple(){
+		Vector3 throwForce;
+		throwForce = grappleTarget.transform.position - gameObject.transform.position;
+		throwForce.Normalize ();
+		throwForce = new Vector3 (throwForce.x * 15, 9, throwForce.z * 15);
+		grappleTarget.BreakGrapple();
+		BreakGrapple();
+		grappleTarget.GetThrown (throwForce);
+	}
+	
+	public virtual void GetThrown(Vector3 force) {
+		throwForce = force;
+		charController.Move (new Vector3 (0,0.1f,0));
+		StartCoroutine ("BeingThrown");
+	}
+
+	public virtual IEnumerator BeingThrown() {
+		throwForce.y += Physics.gravity.y * Time.deltaTime;
+		charController.Move (throwForce * Time.deltaTime);
+		yield return null;
+		if (!charController.isGrounded) {
+			StartCoroutine ("BeingThrown");
+		}
+	}
+
+
+
 
     public virtual void EndAnimation()
     {

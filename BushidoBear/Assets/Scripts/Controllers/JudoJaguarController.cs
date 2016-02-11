@@ -20,7 +20,7 @@ public class JudoJaguarController : AIBaseController {
 		switch(currentState) {
 		case ControllerState.Dead:
 		case ControllerState.Dying:
-		case ControllerState.Fallen:
+		case ControllerState.Prone:
 		case ControllerState.Grappled:
 			return false;
 		case ControllerState.Positioning:
@@ -28,7 +28,7 @@ public class JudoJaguarController : AIBaseController {
 			if(grappler.GetGrabbed(this)) {
 				BeginGrappling(grappler);
 				Debug.Log("Counter Grapple");
-				StartCoroutine("ThrowGrapple");
+				StartCoroutine("CounterGrapple");
 			}
 			return false;
 		default:
@@ -36,5 +36,10 @@ public class JudoJaguarController : AIBaseController {
 			return true;
 		}
 	}
-	
+
+
+	protected virtual IEnumerator CounterGrapple(){
+		yield return new WaitForSeconds(0.5f);
+		ThrowGrapple ();
+	}
 }

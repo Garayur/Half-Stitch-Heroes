@@ -130,7 +130,7 @@ public class AICoordinator : MonoBehaviour {
 			case ControllerState.Flinching:
 				ReassignAI(aiState.owner, aiState.target);
 				break;
-			case ControllerState.Fallen:
+			case ControllerState.Prone:
 				ReassignAI(aiState.owner, aiState.target);
 				break;
 			case ControllerState.Dying:

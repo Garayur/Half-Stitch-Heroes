@@ -9,17 +9,27 @@ public class BasePlayerController : BaseController
     public static event PlayerAction OnPlayerEvent;
 
     public BasePlayerCharacterController character;
+
 	protected GameObject GrappledTarget;
     protected bool acceptAttackInput = true;
 	protected bool isLeftTriggerPressed =  false;
 	protected bool isRightTriggerPressed = false;
     protected int gamePad;
     protected List<AIBaseController> targetList = new List<AIBaseController>();
+	protected int grip = 0;
+	protected int defaultPlayerGrip = 10;
+	protected int defaultNPCGrip = 5;
+	protected int maxGrip = 20;
+	protected float loosenGripStartingTime = 0.5f;
+	protected float loosenGripDecrementAmount = 0.01f;
+	protected float loosenGripTimer;
 
     private int actionValue;
 
 	public virtual void Start() {
 		currentState = ControllerState.Attacking;
+		loosenGripStartingTime = 0.5f;
+		loosenGripDecrementAmount = 0.01f;
 	}
 
     override protected void Update()
@@ -27,15 +37,31 @@ public class BasePlayerController : BaseController
 		if(currentState == ControllerState.Grappling) {
 			if(Input.GetKeyDown("joystick " + gamePad + " button 2")) {
 				HitGrappleTarget();
+				grip++;
 			}
 
 			if(Input.GetKeyDown("joystick " + gamePad + " button 3")) {
 				ThrowGrapple();
 			}
 
+			if(Input.GetKeyDown("joystick " + gamePad + " button 1")) {
+				grip++;
+				if(grip > maxGrip)
+					grip = maxGrip;
+				//press repeatedly to hold
+			}
+
 		}
 		else if(currentState == ControllerState.Grappled) {
-
+			if(Input.GetKeyDown("joystick " + gamePad + " button 1")) {
+				grip--;
+				if (grip <= 0) {
+					grappledBy.BreakGrapple();
+					BreakGrapple ();
+					StopCoroutine ("BreakGrip");
+				}
+				//press repeatedly to break grip
+			}
 		}
 		else{
 	        h = Input.GetAxisRaw("HorizontalP" + gamePad);
@@ -100,7 +126,7 @@ public class BasePlayerController : BaseController
         }
     }
 
-	protected virtual void Grab(int animationNumber = 8){
+	protected override void Grab(int animationNumber = 8){
 		base.Grab(animationNumber);
 		SendControllerEvent(ControllerActions.GRAB, this);
 	}
@@ -128,30 +154,73 @@ public class BasePlayerController : BaseController
         SendControllerEvent(ControllerActions.JUMP, this);    
         base.Jump();
     }
-	
+
+
 	public override void BreakGrapple(){
 		base.BreakGrapple();
 		currentState = ControllerState.Attacking;
-	}
-
-	public virtual void ThrowGrapple(){
-		grappleTarget.BreakGrapple();
-		BreakGrapple();
-		Debug.Log("Thrown");
-		//apply velocity to self in direction. if side of screen is hit fall down. 
+		StopCoroutine ("BreakGrip");
+		StopCoroutine ("LoosenGrip");
 	}
 
 	public override bool GetGrabbed(BaseController grappler){
 		switch(currentState) {
 		case ControllerState.Dead:
 		case ControllerState.Dying:
-		case ControllerState.Fallen:
+		case ControllerState.Prone:
 		case ControllerState.Grappled:
 			return false;
 		default:
 			BeginGrappled(grappler);
 			return true;
 		}
+	}
+
+	protected override void BeginGrappling (BaseController target)
+	{
+		base.BeginGrappling (target);
+		grip = defaultPlayerGrip;
+		loosenGripTimer = loosenGripStartingTime;
+		StartCoroutine ("LoosenGrip");
+	}
+
+	protected override void BeginGrappled (BaseController grappler)
+	{
+		base.BeginGrappled (grappler);
+		grip = defaultNPCGrip;
+		loosenGripTimer = loosenGripStartingTime;
+		StartCoroutine ("BreakGrip");
+	}
+
+	public virtual IEnumerator LoosenGrip() {
+		Debug.Log ("Grip is Loosening");
+		yield return new WaitForSeconds (loosenGripTimer);
+		grip--;
+		if (grip <= 0) {
+			grappleTarget.BreakGrapple();
+			BreakGrapple ();
+			StopCoroutine ("LoosenGrip");
+		}
+		else {
+			loosenGripTimer -= loosenGripDecrementAmount;
+			if(loosenGripTimer <= loosenGripDecrementAmount){
+				loosenGripTimer = loosenGripDecrementAmount;
+				Debug.Log("Grapple break attempts at peak");
+			}
+			StartCoroutine ("LoosenGrip");
+		}
+	}
+
+	public virtual IEnumerator EscapeGrip() {
+		Debug.Log ("Grip is breaking");
+		yield return new WaitForSeconds (loosenGripTimer);
+		grip++;
+		loosenGripTimer -= loosenGripDecrementAmount;
+		if(loosenGripTimer <= loosenGripDecrementAmount){
+			loosenGripTimer = loosenGripDecrementAmount;
+			Debug.Log("Grapple break attempts at peak");
+		}
+		StartCoroutine ("BreakGrip");
 	}
 
     protected virtual void AttackTargetList()

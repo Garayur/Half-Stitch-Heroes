@@ -47,7 +47,7 @@ public class AIBaseController : BaseController {
 		case ControllerState.Attacking:
 			Attacking();
 			break;
-		case ControllerState.Fallen:
+		case ControllerState.Prone:
 			Fall();
 			break;
 		case ControllerState.Grappled:
@@ -198,15 +198,33 @@ public class AIBaseController : BaseController {
 
 	protected override void Grappled() {
 		if(grappledHitCount >= 3) {
+			grappledHitCount = 0;
 			grappledBy.BreakGrapple();
 			BreakGrapple();
 		}
 
+		if (tH > 0) {
+			tH = 1;
+			tV = 0;
+		}
+		else {
+			tH = -1;
+			tV = 0;
+		}
 
+		//tH = VectorToTarget.x;
+	//	tV = VectorToTarget.z;
 	}
-
+	
 	protected virtual void Grappling(){
-
+		if (tH > 0) {
+			tH = 1;
+			tV = 0;
+		}
+		else {
+			tH = -1;
+			tV = 0;
+		}
 	}
 
 	public override void BreakGrapple() {
@@ -219,7 +237,7 @@ public class AIBaseController : BaseController {
 		switch(currentState) {
 		case ControllerState.Dead:
 		case ControllerState.Dying:
-		case ControllerState.Fallen:
+		case ControllerState.Prone:
 		case ControllerState.Grappled:
 			return false;
 		default:
@@ -228,13 +246,6 @@ public class AIBaseController : BaseController {
 		}
 	}
 
-	protected virtual IEnumerator ThrowGrapple(){
-		yield return new WaitForSeconds(0.5f);
-		grappleTarget.BreakGrapple();
-		BreakGrapple();
-		Debug.Log("Thrown");
-	}
-	
 	protected virtual void ApproachTargetUntilInRange() {
 		VectorToTarget = vectorToTarget;
 		
@@ -319,16 +330,24 @@ public class AIBaseController : BaseController {
 
 
 	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
-		if(currentState == ControllerState.StartingAnimation) {
+		switch (currentState) {
+		case ControllerState.StartingAnimation:
 			SendStateChangeEvent();
-		}
-
-		if(currentState == ControllerState.Grappled){
+			break;
+		case ControllerState.Grappled:
 			if(other == grappledBy)
 				grappledHitCount++;
+			break;
+		case ControllerState.Grappling:
+			grappleTarget.BreakGrapple();
+			BreakGrapple();
+			break;
+		default:
+			Flinch();
+			base.TakeDamage(other, hitPosition, hitDirection, amount);
+			break;
 		}
-		Flinch();
-		base.TakeDamage(other, hitPosition, hitDirection, amount);
+
 	}
 
 	public void AssignMovementVector(Vector3 newMovementVector) {
