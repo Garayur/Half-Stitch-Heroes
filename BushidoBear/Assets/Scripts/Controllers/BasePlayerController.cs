@@ -159,7 +159,7 @@ public class BasePlayerController : BaseController
 	public override void BreakGrapple(){
 		base.BreakGrapple();
 		currentState = ControllerState.Attacking;
-		StopCoroutine ("BreakGrip");
+		StopCoroutine ("EscapeGrip");
 		StopCoroutine ("LoosenGrip");
 	}
 
@@ -189,7 +189,7 @@ public class BasePlayerController : BaseController
 		base.BeginGrappled (grappler);
 		grip = defaultNPCGrip;
 		loosenGripTimer = loosenGripStartingTime;
-		StartCoroutine ("BreakGrip");
+		StartCoroutine ("EscapeGrip");
 	}
 
 	public virtual IEnumerator LoosenGrip() {
@@ -220,7 +220,7 @@ public class BasePlayerController : BaseController
 			loosenGripTimer = loosenGripDecrementAmount;
 			Debug.Log("Grapple break attempts at peak");
 		}
-		StartCoroutine ("BreakGrip");
+		StartCoroutine ("EscapeGrip");
 	}
 
     protected virtual void AttackTargetList()
