@@ -34,33 +34,37 @@ public class BasePlayerController : BaseController
 
     override protected void Update()
     {
-		if(currentState == ControllerState.Grappling) {
-			if(Input.GetKeyDown("joystick " + gamePad + " button 2")) {
-				HitGrappleTarget();
+		if (currentState == ControllerState.Grappling) {
+			if (Input.GetKeyDown ("joystick " + gamePad + " button 2")) {
+				HitGrappleTarget ();
 				grip++;
 			}
 
-			if(Input.GetKeyDown("joystick " + gamePad + " button 3")) {
-				ThrowGrapple();
+			if (Input.GetKeyDown ("joystick " + gamePad + " button 3")) {
+				ThrowGrapple ();
 			}
 
-			if(Input.GetKeyDown("joystick " + gamePad + " button 1")) {
+			if (Input.GetKeyDown ("joystick " + gamePad + " button 1")) {
 				grip++;
-				if(grip > maxGrip)
+				if (grip > maxGrip)
 					grip = maxGrip;
 				//press repeatedly to hold
 			}
 
-		}
-		else if(currentState == ControllerState.Grappled) {
-			if(Input.GetKeyDown("joystick " + gamePad + " button 1")) {
+		} else if (currentState == ControllerState.Grappled) {
+			if (Input.GetKeyDown ("joystick " + gamePad + " button 1")) {
 				grip--;
 				if (grip <= 0) {
-					grappledBy.BreakGrapple();
+					grappledBy.BreakGrapple ();
 					BreakGrapple ();
 					StopCoroutine ("BreakGrip");
 				}
 				//press repeatedly to break grip
+			}
+		} else if (currentState == ControllerState.Blocking) {
+			if(Input.GetKeyUp("joystick " + gamePad + " button 1"))
+			{
+				EndBlock();
 			}
 		}
 		else{
@@ -84,6 +88,10 @@ public class BasePlayerController : BaseController
 	        {
 	            HeavyAttack();
 	        }
+
+			if(Input.GetKeyDown("joystick " + gamePad + " button 1")) {
+				Block();
+			}
 
 			if (Input.GetAxis("LTP" + gamePad) > 0)
 			{
@@ -137,10 +145,15 @@ public class BasePlayerController : BaseController
 	}
 
 	protected override void Block(int animationNumber = 0)
-	{
+	{ 
         SendControllerEvent(ControllerActions.BLOCK, this);
-		character.Block(isJumping);
+		base.Block(animationNumber);
     }
+
+	protected override void EndBlock(){
+		currentState = ControllerState.Attacking;
+		base.EndBlock ();
+	}
 
 	protected override void SpecialAction(int animationNumber = 0)
 	{
@@ -272,4 +285,21 @@ public class BasePlayerController : BaseController
             targetList.Add(charControl);
         }
     }
+
+	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
+		switch (currentState) {
+		case ControllerState.Grappling:
+			grappleTarget.BreakGrapple();
+			BreakGrapple();
+			base.TakeDamage(other, hitPosition, hitDirection, amount);
+			break;
+		case ControllerState.Blocking:
+			break;
+		default:
+			//Flinch();
+			base.TakeDamage(other, hitPosition, hitDirection, amount);
+			break;
+		}
+		
+	}
 }

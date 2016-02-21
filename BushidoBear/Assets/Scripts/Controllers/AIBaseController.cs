@@ -88,7 +88,6 @@ public class AIBaseController : BaseController {
 		ApproachTargetUntilInRange();
 	}
 
-
 	protected virtual IEnumerator Attack(){
 		yield return new WaitForSeconds(attackFrequency);
 		StartCoroutine("Attack");
@@ -161,6 +160,7 @@ public class AIBaseController : BaseController {
 
 	protected virtual void EndFlinch() {
 		currentState = ControllerState.Positioning;
+		//animator.SetInteger("Action", 0);
 		SendStateChangeEvent();
 		animationFinishedDelegate = null;
 	}
@@ -240,6 +240,10 @@ public class AIBaseController : BaseController {
 		case ControllerState.Prone:
 		case ControllerState.Grappled:
 			return false;
+		case ControllerState.Flinching:
+			EndFlinch();
+			BeginGrappled(grappler);
+			return true;
 		default:
 			BeginGrappled(grappler);
 			return true;
@@ -328,19 +332,29 @@ public class AIBaseController : BaseController {
 		animator.SetInteger("Action", animationNumber);
 	}
 
-
+	protected override void EndBlock(){
+		currentState = ControllerState.Positioning;
+		base.EndBlock ();
+	}
+	
+	
 	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
 		switch (currentState) {
 		case ControllerState.StartingAnimation:
 			SendStateChangeEvent();
+			base.TakeDamage(other, hitPosition, hitDirection, amount);
 			break;
 		case ControllerState.Grappled:
 			if(other == grappledBy)
 				grappledHitCount++;
+			base.TakeDamage(other, hitPosition, hitDirection, amount);
 			break;
 		case ControllerState.Grappling:
 			grappleTarget.BreakGrapple();
 			BreakGrapple();
+			base.TakeDamage(other, hitPosition, hitDirection, amount);
+			break;
+		case ControllerState.Blocking:
 			break;
 		default:
 			Flinch();

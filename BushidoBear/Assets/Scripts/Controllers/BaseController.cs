@@ -2,7 +2,7 @@
 using System.Collections;
 
 public enum ControllerActions { LIGHTATTACK, HEAVYATTACK, BLOCK, GRAB, SPECIAL, JUMP, JUMPINGLIGHTATTACK, JUMPINGHEAVYATTACK };
-public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Prone, Dying, Dead, Grappled, Grappling, thrown };
+public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Prone, Dying, Dead, Grappled, Grappling, Thrown, Blocking };
 
 public class BaseController : MonoBehaviour 
 {
@@ -18,7 +18,7 @@ public class BaseController : MonoBehaviour
 
     public Vector3 attackOffset = Vector3.zero;
 
-    public float attackRadius = 1.0f;
+    public float attackRadius = 1.5f;
     public float airTime = 0.0f;
     public float health = 100f;
     public float lightAttackDamage = 5f;
@@ -170,7 +170,16 @@ public class BaseController : MonoBehaviour
 
 	protected virtual void HeavyAttack(int animationNumber = 1){}
 
-	protected virtual void Block(int animationNumber = 0){}
+	protected virtual void Block(int animationNumber = 0){
+		h = 0;
+		v = 0;
+		currentState = ControllerState.Blocking;
+		animator.SetBool ("Blocking", true);
+	}
+
+	protected virtual void EndBlock(){
+		animator.SetBool ("Blocking", false);
+	}
 
 	protected virtual void SpecialAction(int animationNumber = 0){}
 
@@ -307,7 +316,6 @@ public class BaseController : MonoBehaviour
         float radius = attackRadius;
 
 		if(currentState == ControllerState.Grappling) {
-			Debug.Log(grappleTarget);
 			grappleTarget.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage());
 		}
 		else {
