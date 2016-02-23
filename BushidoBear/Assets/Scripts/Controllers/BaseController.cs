@@ -244,10 +244,12 @@ public class BaseController : MonoBehaviour
 		if (tH > 0) {
 			tH = 1;
 			tV = 0;
+			grappleTarget.gameObject.transform.position = gameObject.transform.position + new Vector3(1.5f, 0, 0);
 		}
 		else {
 			tH = -1;
 			tV = 0;
+			grappleTarget.transform.position = gameObject.transform.position + new Vector3(-1.5f, 0, 0);
 		}
 	}
 	
@@ -261,12 +263,10 @@ public class BaseController : MonoBehaviour
 		if (Vector3.Normalize(grappledBy.transform.position - gameObject.transform.position).x > 0) {
 			tH = 1;
 			tV = 0;
-			gameObject.transform.position = grappledBy.gameObject.transform.position + new Vector3(-1.5f, 0, 0);
 		}
 		else {
 			tH = -1;
 			tV = 0;
-			gameObject.transform.position = grappledBy.gameObject.transform.position + new Vector3(1.5f, 0, 0);
 		}
 
 	}

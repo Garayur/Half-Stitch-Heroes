@@ -9,8 +9,7 @@ public class BasePlayerController : BaseController
     public static event PlayerAction OnPlayerEvent;
 
     public BasePlayerCharacterController character;
-
-	protected GameObject GrappledTarget;
+	
     protected bool acceptAttackInput = true;
 	protected bool isLeftTriggerPressed =  false;
 	protected bool isRightTriggerPressed = false;
@@ -41,6 +40,16 @@ public class BasePlayerController : BaseController
 			}
 
 			if (Input.GetKeyDown ("joystick " + gamePad + " button 3")) {
+				if(Input.GetAxisRaw("HorizontalP" + gamePad) > 0){
+					tH = 1;
+					Debug.Log(grappleTarget);
+					grappleTarget.transform.position = gameObject.transform.position + new Vector3(1.5f, 0, 0);
+				}
+				else if(Input.GetAxisRaw("HorizontalP" + gamePad) < 0){
+					tH = -1;
+					Debug.Log(grappleTarget);
+					grappleTarget.transform.position = gameObject.transform.position + new Vector3(-1.5f, 0, 0);
+				}
 				ThrowGrapple ();
 			}
 
