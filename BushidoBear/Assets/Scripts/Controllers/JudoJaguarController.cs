@@ -40,6 +40,6 @@ public class JudoJaguarController : AIBaseController {
 
 	protected virtual IEnumerator CounterGrapple(){
 		yield return new WaitForSeconds(0.5f);
-		ThrowGrapple ();
+		ThrowGrappleToCenter ();
 	}
 }

@@ -12,7 +12,6 @@ public class AICoordinator : MonoBehaviour {
 	public float maxDistance = 10;
 	protected float movementUpdateInterval = 0.5f;
 	protected float timer = 0.25f;
-	protected bool alertTriggered = false;
 
 	public int xmin = 1;
 	public int xmax = 19;
@@ -41,21 +40,12 @@ public class AICoordinator : MonoBehaviour {
 		timer = movementUpdateInterval;
 	}
 
-	void Update() {
-		if(alertTriggered) {
-			timer -= Time.deltaTime;
-			if(timer <= 0) {
-				AssignMovementVector();
-				timer = movementUpdateInterval;
-			}
-		}
-	}
-
 
 	protected virtual void BeginCombat() {
 		FindPlayers();
 		AlertSquad();
 		AssignAttackers();
+		StartCoroutine ("AssignMovementVector");
 	}
 
 	protected virtual void FindPlayers() {
@@ -66,6 +56,7 @@ public class AICoordinator : MonoBehaviour {
 
 	protected void DestroySelfOnSquadDeath() {
 		if(AISquad.Count <= 0) {
+			StopCoroutine("AssignMovementVector");
 			Destroy(gameObject);
 		}
 	}
@@ -109,10 +100,11 @@ public class AICoordinator : MonoBehaviour {
 
 	protected void AlertSquad(){
 		foreach (AIBaseController ai in AISquad) {
+			ai.AssignCenterPoint(new Vector2((xmax + xmin) /2, (zmax + zmin) / 2));
 			ai.StartCombatPositioning();
 		}
 
-		alertTriggered = true;
+		StartCoroutine ("AssignMovementVector");
 	}
 
 	protected void CheckSquadAssignments(AIStateData aiState) {
@@ -145,7 +137,8 @@ public class AICoordinator : MonoBehaviour {
 		}
 	}
 
-	protected void AssignMovementVector(){
+	protected IEnumerator AssignMovementVector(){
+		yield return new WaitForSeconds (movementUpdateInterval);
 		Vector3 centroid, movementVector;
 
 		centroid = CalculateCentroid();
@@ -157,6 +150,8 @@ public class AICoordinator : MonoBehaviour {
 				ai.AssignMovementVector(movementVector);
 			}
 		}
+
+		StartCoroutine ("AssignMovementVector");
 
 	}
 

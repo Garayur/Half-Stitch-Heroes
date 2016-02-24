@@ -16,6 +16,7 @@ public class AIBaseController : BaseController {
 	protected Vector3 VectorToTarget;
 	protected float distanceToTarget;
 	protected Vector3 aiMovementVector;
+	protected Vector2 centerOfField;
 	protected int grappledHitCount = 0;
 	protected float deadTimer;
 
@@ -233,6 +234,15 @@ public class AIBaseController : BaseController {
 
 	}
 
+	protected virtual void ThrowGrappleToCenter() {
+		if(gameObject.transform.position.x > centerOfField.x)
+			grappleTarget.transform.position = gameObject.transform.position + new Vector3(-1.5f, 0, 0);
+		else
+			grappleTarget.transform.position = gameObject.transform.position + new Vector3(1.5f, 0, 0);
+
+		ThrowGrapple ();
+	}
+
 	public override bool GetGrabbed(BaseController grappler){
 		switch(currentState) {
 		case ControllerState.Dead:
@@ -381,6 +391,10 @@ public class AIBaseController : BaseController {
 		yield return new WaitForSeconds(1.0f);
 
 		StartCoroutine(FindAndAssignFacingTarget());
+	}
+
+	public void AssignCenterPoint(Vector2 center){
+		centerOfField = center;
 	}
 
 	public override void EndAnimation(){

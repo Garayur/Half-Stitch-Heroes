@@ -42,12 +42,10 @@ public class BasePlayerController : BaseController
 			if (Input.GetKeyDown ("joystick " + gamePad + " button 3")) {
 				if(Input.GetAxisRaw("HorizontalP" + gamePad) > 0){
 					tH = 1;
-					Debug.Log(grappleTarget);
 					grappleTarget.transform.position = gameObject.transform.position + new Vector3(1.5f, 0, 0);
 				}
 				else if(Input.GetAxisRaw("HorizontalP" + gamePad) < 0){
 					tH = -1;
-					Debug.Log(grappleTarget);
 					grappleTarget.transform.position = gameObject.transform.position + new Vector3(-1.5f, 0, 0);
 				}
 				ThrowGrapple ();
