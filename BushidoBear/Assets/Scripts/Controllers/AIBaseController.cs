@@ -23,6 +23,7 @@ public class AIBaseController : BaseController {
 	protected AttackInformation lightAttackInfo = new AttackInformation(2, 5);
 	protected AttackInformation heavyAttackInfo = new AttackInformation(1, 10);
 	protected AttackInformation grapplePunchAttackInfo = new AttackInformation(2, 5);
+	protected AttackInformation grappleThrowAttackInfo = new AttackInformation (2, 5);
 
 	protected int currentComboStep = 0;
 	protected List<ComboNode> currentCombo;
@@ -241,6 +242,11 @@ public class AIBaseController : BaseController {
 			grappleTarget.transform.position = gameObject.transform.position + new Vector3(1.5f, 0, 0);
 
 		ThrowGrapple ();
+	}
+
+	public override void ThrowGrapple(){
+		currentAttackInfo = grappleThrowAttackInfo;
+		base.ThrowGrapple ();
 	}
 
 	public override bool GetGrabbed(BaseController grappler){

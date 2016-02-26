@@ -151,6 +151,11 @@ public class BasePlayerController : BaseController
 		animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
 	}
 
+	public override void ThrowGrapple(){
+		currentAttackInfo = character.ThrowGrapple ();
+		base.ThrowGrapple ();
+	}
+
 	protected override void Block(int animationNumber = 0)
 	{ 
         SendControllerEvent(ControllerActions.BLOCK, this);

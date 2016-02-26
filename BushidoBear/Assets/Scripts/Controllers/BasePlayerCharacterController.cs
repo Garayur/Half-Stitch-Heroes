@@ -17,6 +17,7 @@ public class BasePlayerCharacterController : MonoBehaviour
     protected AttackInformation lightAttackInformation = new AttackInformation(2,5);
     protected AttackInformation HeavyAttackInformation = new AttackInformation(1, 10);
 	protected AttackInformation grapplePunchAttackInformation = new AttackInformation(2,5);
+	protected AttackInformation grappleThrowAttackInfo = new AttackInformation (2, 5);
 
     private bool isTimer = false;
 
@@ -69,6 +70,10 @@ public class BasePlayerCharacterController : MonoBehaviour
 	public virtual AttackInformation HitGrappleTarget()
 	{
 		return grapplePunchAttackInformation;
+	}
+
+	public virtual AttackInformation ThrowGrapple(){
+		return grappleThrowAttackInfo;
 	}
 
 	public virtual int Block(bool isJumping) { return 0; }

@@ -284,21 +284,28 @@ public class BaseController : MonoBehaviour
 		throwForce = new Vector3 (throwForce.x * 15, 9, throwForce.z * 15);
 		grappleTarget.BreakGrapple();
 		BreakGrapple();
-		grappleTarget.GetThrown (throwForce);
+		grappleTarget.GetThrown (throwForce, currentAttackInfo.GetAttackDamage());
 	}
 	
-	public virtual void GetThrown(Vector3 force) {
+	public virtual void GetThrown(Vector3 force, int damage) {
 		throwForce = force;
 		charController.Move (new Vector3 (0,0.1f,0));
-		StartCoroutine ("BeingThrown");
+		animator.SetBool ("Thrown", true);
+		StartCoroutine ("BeingThrown", damage);
+		currentState = ControllerState.Thrown;
 	}
 
-	public virtual IEnumerator BeingThrown() {
+	public virtual IEnumerator BeingThrown(int damage) {
 		throwForce.y += Physics.gravity.y * Time.deltaTime;
 		charController.Move (throwForce * Time.deltaTime);
 		yield return null;
 		if (!charController.isGrounded) {
-			StartCoroutine ("BeingThrown");
+			StartCoroutine ("BeingThrown", damage);
+		}
+		else {
+			TakeDamage( null , transform.TransformPoint(attackOffset), transform.forward, damage);
+			animator.SetBool ("Thrown", false);
+			currentState = ControllerState.Prone;
 		}
 	}
 
