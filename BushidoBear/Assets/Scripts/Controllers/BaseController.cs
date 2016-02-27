@@ -2,7 +2,7 @@
 using System.Collections;
 
 public enum ControllerActions { LIGHTATTACK, HEAVYATTACK, BLOCK, GRAB, SPECIAL, JUMP, JUMPINGLIGHTATTACK, JUMPINGHEAVYATTACK };
-public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Prone, Dying, Dead, Grappled, Grappling, Thrown, Blocking };
+public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Prone, Standing, Dying, Dead, Grappled, Grappling, Thrown, Blocking };
 
 public class BaseController : MonoBehaviour 
 {
@@ -290,7 +290,7 @@ public class BaseController : MonoBehaviour
 	public virtual void GetThrown(Vector3 force, int damage) {
 		throwForce = force;
 		charController.Move (new Vector3 (0,0.1f,0));
-		animator.SetBool ("Thrown", true);
+		animator.SetTrigger ("Thrown");
 		StartCoroutine ("BeingThrown", damage);
 		currentState = ControllerState.Thrown;
 	}
@@ -304,13 +304,22 @@ public class BaseController : MonoBehaviour
 		}
 		else {
 			TakeDamage( null , transform.TransformPoint(attackOffset), transform.forward, damage);
-			animator.SetBool ("Thrown", false);
 			currentState = ControllerState.Prone;
+			StartCoroutine("StandFromProne", 2.0f);
 		}
 	}
 
 
+	public virtual IEnumerator StandFromProne(float recoverDelay){
+		yield return new WaitForSeconds (recoverDelay);
+		currentState = ControllerState.Standing;
+		animator.SetTrigger ("Stand"); 
+	}
 
+	public virtual void ResumeCombat(){
+		currentState = ControllerState.Positioning;
+	}
+	 
 
     public virtual void EndAnimation()
     {

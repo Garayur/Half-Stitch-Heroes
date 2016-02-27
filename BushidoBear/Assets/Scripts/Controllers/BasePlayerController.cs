@@ -26,7 +26,7 @@ public class BasePlayerController : BaseController
     private int actionValue;
 
 	public virtual void Start() {
-		currentState = ControllerState.Attacking;
+		currentState = ControllerState.Positioning;
 		loosenGripStartingTime = 0.5f;
 		loosenGripDecrementAmount = 0.01f;
 	}
@@ -163,7 +163,7 @@ public class BasePlayerController : BaseController
     }
 
 	protected override void EndBlock(){
-		currentState = ControllerState.Attacking;
+		currentState = ControllerState.Positioning;
 		base.EndBlock ();
 	}
 
@@ -183,7 +183,7 @@ public class BasePlayerController : BaseController
 
 	public override void BreakGrapple(){
 		base.BreakGrapple();
-		currentState = ControllerState.Attacking;
+		currentState = ControllerState.Positioning;
 		StopCoroutine ("EscapeGrip");
 		StopCoroutine ("LoosenGrip");
 	}
