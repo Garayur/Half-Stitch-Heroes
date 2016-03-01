@@ -13,10 +13,10 @@ public class AICoordinator : MonoBehaviour {
 	protected float movementUpdateInterval = 0.5f;
 	protected float timer = 0.25f;
 
-	public int xmin = 1;
-	public int xmax = 19;
-	public int zmin = -5;
-	public int zmax = 15;
+	public int xmin = -9;
+	public int xmax = 9;
+	public int zmin = 0;
+	public int zmax = 14;
 
 	//temp destroy with ontriggerenter when box is no longer being used to trigger begincombat
 	protected bool hasBeenTriggered = false;

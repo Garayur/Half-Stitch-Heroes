@@ -15,6 +15,7 @@ public class BaseController : MonoBehaviour
     public float turnSpeed = 10.0f;
     public float moveSpeed = 2.0f;
     public float runSpeedScale = 2.0f;
+	public float standupDelay = 2.0f;
 
     public Vector3 attackOffset = Vector3.zero;
 
@@ -281,7 +282,7 @@ public class BaseController : MonoBehaviour
 		Vector3 throwForce;
 		throwForce = grappleTarget.transform.position - gameObject.transform.position;
 		throwForce.Normalize ();
-		throwForce = new Vector3 (throwForce.x * 15, 9, throwForce.z * 15);
+		throwForce = new Vector3 (throwForce.x * 11, 8, throwForce.z * 11);
 		grappleTarget.BreakGrapple();
 		BreakGrapple();
 		grappleTarget.GetThrown (throwForce, currentAttackInfo.GetAttackDamage());
@@ -305,7 +306,7 @@ public class BaseController : MonoBehaviour
 		else {
 			TakeDamage( null , transform.TransformPoint(attackOffset), transform.forward, damage);
 			currentState = ControllerState.Prone;
-			StartCoroutine("StandFromProne", 2.0f);
+			StartCoroutine("StandFromProne", standupDelay);
 		}
 	}
 

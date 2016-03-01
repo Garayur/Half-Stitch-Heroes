@@ -5,8 +5,9 @@ using System.Collections.Generic;
 public class AIBaseController : BaseController {
 
 	public float flinchDuration = 1.0f;
-	public float attackFrequency = 3.0f;
+	public float attackFrequency = 1.0f;
 	public float deadDuration = 3.0f;
+	public float blockDuration = 1.0f;
 	public float maxAttackRange = 3;
 	public float midAttackRange = 1.9f;
 	public float minAttackRange = 1.5f;
@@ -348,6 +349,12 @@ public class AIBaseController : BaseController {
 		animator.SetInteger("Action", animationNumber);
 	}
 
+	protected IEnumerator BlockTimer(){
+	
+		yield return new WaitForSeconds (blockDuration);
+		EndBlock ();
+	}
+
 	protected override void EndBlock(){
 		currentState = ControllerState.Positioning;
 		base.EndBlock ();
@@ -432,7 +439,8 @@ public class AIBaseController : BaseController {
 				TargetGrabbing(player);
 				break;
 			case ControllerActions.HEAVYATTACK:
-				TargetHeavyAttacking();
+				if(Vector3.Distance(gameObject.transform.position, target.transform.position) < 2)
+					TargetHeavyAttacking();
 				break;
 			case ControllerActions.JUMP:
 				TargetJumping();

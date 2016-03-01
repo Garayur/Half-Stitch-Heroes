@@ -33,12 +33,13 @@ public class BasePlayerController : BaseController
 
     override protected void Update()
     {
-		if (currentState == ControllerState.Grappling) {
+		switch (currentState) {
+		case ControllerState.Grappling:
 			if (Input.GetKeyDown ("joystick " + gamePad + " button 2")) {
 				HitGrappleTarget ();
 				grip++;
 			}
-
+			
 			if (Input.GetKeyDown ("joystick " + gamePad + " button 3")) {
 				if(Input.GetAxisRaw("HorizontalP" + gamePad) > 0){
 					tH = 1;
@@ -50,15 +51,15 @@ public class BasePlayerController : BaseController
 				}
 				ThrowGrapple ();
 			}
-
+			
 			if (Input.GetKeyDown ("joystick " + gamePad + " button 1")) {
 				grip++;
 				if (grip > maxGrip)
 					grip = maxGrip;
 				//press repeatedly to hold
 			}
-
-		} else if (currentState == ControllerState.Grappled) {
+			break;
+		case ControllerState.Grappled:
 			if (Input.GetKeyDown ("joystick " + gamePad + " button 1")) {
 				grip--;
 				if (grip <= 0) {
@@ -68,38 +69,41 @@ public class BasePlayerController : BaseController
 				}
 				//press repeatedly to break grip
 			}
-		} else if (currentState == ControllerState.Blocking) {
+			break;
+		case ControllerState.Blocking:
 			if(Input.GetKeyUp("joystick " + gamePad + " button 1"))
 			{
 				EndBlock();
 			}
-		}
-		else{
-	        h = Input.GetAxisRaw("HorizontalP" + gamePad);
-	        v = Input.GetAxisRaw("VerticalP" + gamePad);
-
-	        tH = h;
-	        tV = v;
-
-	        if (Input.GetKeyDown("joystick " + gamePad + " button 0"))
-	        {
-	            Jump();
-	        }
-
-	        if (Input.GetKeyDown("joystick " + gamePad + " button 2"))
-	        {
-	            LightAttack();
-	        }
-
-	        if (Input.GetKeyDown("joystick " + gamePad + " button 3"))
-	        {
-	            HeavyAttack();
-	        }
-
+			break;
+		case ControllerState.Prone:
+			break;
+		default:
+			h = Input.GetAxisRaw("HorizontalP" + gamePad);
+			v = Input.GetAxisRaw("VerticalP" + gamePad);
+			
+			tH = h;
+			tV = v;
+			
+			if (Input.GetKeyDown("joystick " + gamePad + " button 0"))
+			{
+				Jump();
+			}
+			
+			if (Input.GetKeyDown("joystick " + gamePad + " button 2"))
+			{
+				LightAttack();
+			}
+			
+			if (Input.GetKeyDown("joystick " + gamePad + " button 3"))
+			{
+				HeavyAttack();
+			}
+			
 			if(Input.GetKeyDown("joystick " + gamePad + " button 1")) {
 				Block();
 			}
-
+			
 			if (Input.GetAxis("LTP" + gamePad) > 0)
 			{
 				if(!isLeftTriggerPressed) {
@@ -111,7 +115,10 @@ public class BasePlayerController : BaseController
 			{
 				isLeftTriggerPressed = false;
 			}
+			break;
+		
 		}
+
 
         base.Update();
     }

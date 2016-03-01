@@ -5,8 +5,10 @@ public class JudoJaguarController : AIBaseController {
 
 
 	protected override void TargetHeavyAttacking() {
-		if(Random.Range(0, 4) == 0) //25% chance
-			Block();
+		if (Random.Range (0, 4) == 0) { //25% chance 
+			Block ();
+			StartCoroutine ("BlockTimer");
+		}
 	}
 
 	//special attack knocks player to ground(leg sweep
