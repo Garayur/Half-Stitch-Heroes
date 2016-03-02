@@ -77,6 +77,9 @@ public class BasePlayerController : BaseController
 			}
 			break;
 		case ControllerState.Prone:
+		case ControllerState.Thrown:
+		case ControllerState.Standing:
+		case ControllerState.Jumping:
 			break;
 		default:
 			h = Input.GetAxisRaw("HorizontalP" + gamePad);

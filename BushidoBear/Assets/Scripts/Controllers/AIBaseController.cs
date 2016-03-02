@@ -163,7 +163,6 @@ public class AIBaseController : BaseController {
 
 	protected virtual void EndFlinch() {
 		currentState = ControllerState.Positioning;
-		//animator.SetInteger("Action", 0);
 		SendStateChangeEvent();
 		animationFinishedDelegate = null;
 	}
@@ -233,7 +232,6 @@ public class AIBaseController : BaseController {
 	public override void BreakGrapple() {
 		base.BreakGrapple();
 		currentState = ControllerState.Positioning;
-
 	}
 
 	protected virtual void ThrowGrappleToCenter() {

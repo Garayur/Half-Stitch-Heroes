@@ -2,7 +2,7 @@
 using System.Collections;
 
 public enum ControllerActions { LIGHTATTACK, HEAVYATTACK, BLOCK, GRAB, SPECIAL, JUMP, JUMPINGLIGHTATTACK, JUMPINGHEAVYATTACK };
-public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Prone, Standing, Dying, Dead, Grappled, Grappling, Thrown, Blocking };
+public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Prone, Standing, Dying, Dead, Grappled, Grappling, Thrown, Blocking, Jumping };
 
 public class BaseController : MonoBehaviour 
 {
@@ -189,7 +189,14 @@ public class BaseController : MonoBehaviour
 		if (charController.isGrounded)
 		{
 			animator.SetTrigger("Jump");
+			h = 0;
+			v = 0;
+			currentState = ControllerState.Jumping;
 		}
+	}
+
+	public virtual void JumpEnded() {
+		currentState = ControllerState.Positioning;
 	}
 
 
