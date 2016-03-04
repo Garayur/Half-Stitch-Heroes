@@ -35,12 +35,12 @@ public class BasePlayerController : BaseController
     {
 		switch (currentState) {
 		case ControllerState.Grappling:
-			if (Input.GetKeyDown ("joystick " + gamePad + " button 2")) {
+			if (Input.GetButtonDown ("Light Attack")) {
 				HitGrappleTarget ();
 				grip++;
 			}
 			
-			if (Input.GetKeyDown ("joystick " + gamePad + " button 3")) {
+			if (Input.GetButtonDown ("Heavy Attack")) {
 				if(Input.GetAxisRaw("HorizontalP" + gamePad) > 0){
 					tH = 1;
 					grappleTarget.transform.position = gameObject.transform.position + new Vector3(1.5f, 0, 0);
@@ -52,7 +52,7 @@ public class BasePlayerController : BaseController
 				ThrowGrapple ();
 			}
 			
-			if (Input.GetKeyDown ("joystick " + gamePad + " button 1")) {
+			if (Input.GetButtonDown ("Defend")) {
 				grip++;
 				if (grip > maxGrip)
 					grip = maxGrip;
@@ -60,7 +60,7 @@ public class BasePlayerController : BaseController
 			}
 			break;
 		case ControllerState.Grappled:
-			if (Input.GetKeyDown ("joystick " + gamePad + " button 1")) {
+			if (Input.GetButtonDown ("Defend")) {
 				grip--;
 				if (grip <= 0) {
 					grappledBy.BreakGrapple ();
@@ -71,7 +71,7 @@ public class BasePlayerController : BaseController
 			}
 			break;
 		case ControllerState.Blocking:
-			if(Input.GetKeyUp("joystick " + gamePad + " button 1"))
+			if(Input.GetButtonUp("Defend"))
 			{
 				EndBlock();
 			}
@@ -87,35 +87,27 @@ public class BasePlayerController : BaseController
 			
 			tH = h;
 			tV = v;
-			
-			if (Input.GetKeyDown("joystick " + gamePad + " button 0"))
-			{
+
+			if(Input.GetButtonDown("Jump")){
 				Jump();
 			}
-			
-			if (Input.GetKeyDown("joystick " + gamePad + " button 2"))
-			{
+			else if(Input.GetButtonDown("Light Attack")){
 				LightAttack();
 			}
-			
-			if (Input.GetKeyDown("joystick " + gamePad + " button 3"))
-			{
+			else if(Input.GetButtonDown("Heavy Attack")){
 				HeavyAttack();
 			}
-			
-			if(Input.GetKeyDown("joystick " + gamePad + " button 1")) {
+			else if(Input.GetButtonDown("Defend")){
 				Block();
 			}
-			
-			if (Input.GetAxis("LTP" + gamePad) > 0)
-			{
+
+			if (Input.GetAxis("LTP" + gamePad) > 0) {
 				if(!isLeftTriggerPressed) {
 					isLeftTriggerPressed = true;
 					Grab();
 				}
 			}
-			else
-			{
+			else {
 				isLeftTriggerPressed = false;
 			}
 			break;
