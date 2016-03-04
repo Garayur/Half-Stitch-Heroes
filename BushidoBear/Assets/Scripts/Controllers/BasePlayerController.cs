@@ -11,7 +11,7 @@ public class BasePlayerController : BaseController
     public BasePlayerCharacterController character;
 	
     protected bool acceptAttackInput = true;
-	protected bool isLeftTriggerPressed =  false;
+	protected bool isGrabPressed =  false;
 	protected bool isRightTriggerPressed = false;
     protected int gamePad;
     protected List<AIBaseController> targetList = new List<AIBaseController>();
@@ -41,11 +41,11 @@ public class BasePlayerController : BaseController
 			}
 			
 			if (Input.GetButtonDown ("Heavy Attack")) {
-				if(Input.GetAxisRaw("HorizontalP" + gamePad) > 0){
+				if(Input.GetAxisRaw("Horizontal") > 0){
 					tH = 1;
 					grappleTarget.transform.position = gameObject.transform.position + new Vector3(1.5f, 0, 0);
 				}
-				else if(Input.GetAxisRaw("HorizontalP" + gamePad) < 0){
+				else if(Input.GetAxisRaw("Horizontal") < 0){
 					tH = -1;
 					grappleTarget.transform.position = gameObject.transform.position + new Vector3(-1.5f, 0, 0);
 				}
@@ -82,8 +82,8 @@ public class BasePlayerController : BaseController
 		case ControllerState.Jumping:
 			break;
 		default:
-			h = Input.GetAxisRaw("HorizontalP" + gamePad);
-			v = Input.GetAxisRaw("VerticalP" + gamePad);
+			h = Input.GetAxisRaw("Horizontal");
+			v = Input.GetAxisRaw("Vertical");
 			
 			tH = h;
 			tV = v;
@@ -100,16 +100,20 @@ public class BasePlayerController : BaseController
 			else if(Input.GetButtonDown("Defend")){
 				Block();
 			}
-
-			if (Input.GetAxis("LTP" + gamePad) > 0) {
-				if(!isLeftTriggerPressed) {
-					isLeftTriggerPressed = true;
+			else if(Input.GetButtonDown("Grab")) {
+				Grab();
+			}
+			else if (Input.GetAxis("Grab") > 0) {
+				Debug.Log("Trigger pressed");
+				if(!isGrabPressed) {
+					isGrabPressed = true;
 					Grab();
 				}
 			}
 			else {
-				isLeftTriggerPressed = false;
+				isGrabPressed = false;
 			}
+
 			break;
 		
 		}
