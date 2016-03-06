@@ -359,27 +359,33 @@ public class AIBaseController : BaseController {
 	}
 	
 	
-	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
+	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount, AttackEffect effect) {
 		switch (currentState) {
 		case ControllerState.StartingAnimation:
 			SendStateChangeEvent();
-			base.TakeDamage(other, hitPosition, hitDirection, amount);
+			base.TakeDamage(other, hitPosition, hitDirection, amount, effect);
 			break;
 		case ControllerState.Grappled:
 			if(other == grappledBy)
 				grappledHitCount++;
-			base.TakeDamage(other, hitPosition, hitDirection, amount);
+			base.TakeDamage(other, hitPosition, hitDirection, amount, effect);
 			break;
 		case ControllerState.Grappling:
 			grappleTarget.BreakGrapple();
 			BreakGrapple();
-			base.TakeDamage(other, hitPosition, hitDirection, amount);
+			base.TakeDamage(other, hitPosition, hitDirection, amount, effect);
 			break;
 		case ControllerState.Blocking:
 			break;
 		default:
-			Flinch();
-			base.TakeDamage(other, hitPosition, hitDirection, amount);
+			Debug.Log(effect);
+			if(effect == AttackEffect.Knockdown){
+				FallProne();
+			}
+			else
+				Flinch();
+
+			base.TakeDamage(other, hitPosition, hitDirection, amount, AttackEffect.None);
 			break;
 		}
 

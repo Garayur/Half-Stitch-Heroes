@@ -37,3 +37,10 @@ BushidoBear/Assets/Scripts/Controllers/SimpleAIController.cs.meta
 BushidoBear/Assets/Scripts/Controllers/JudoJaguarController.cs.meta
 BushidoBear/Assets/Scripts/Controllers/KravMagaMacawController.cs.meta
 BushidoBear/Assets/Scripts/Controllers/NunchuckWoodchuckController.cs.meta
+BushidoBear/Assets/AceAsset/SchoolGirl/Humanoid/Girl@Skill.FBX.meta
+BushidoBear/Assets/AceAsset/SchoolGirl/Humanoid/Girl@Attack.FBX.meta
+BushidoBear/Assets/AceAsset/SchoolGirl/Humanoid/Girl@Damage01.FBX.meta
+BushidoBear/Assets/Materials/Materials.meta
+BushidoBear/Assets/Materials/Materials/Nijo-Castle.mat
+BushidoBear/Assets/Materials/Materials/Nijo-Castle.mat.meta
+BushidoBear/Assets/Scripts/Controllers/GrapplerAI.cs.meta

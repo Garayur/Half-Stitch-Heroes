@@ -3,6 +3,7 @@ using System.Collections;
 
 public enum ControllerActions { LIGHTATTACK, HEAVYATTACK, BLOCK, GRAB, SPECIAL, JUMP, JUMPINGLIGHTATTACK, JUMPINGHEAVYATTACK };
 public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Prone, Standing, Dying, Dead, Grappled, Grappling, Thrown, Blocking, Jumping };
+public enum AttackEffect {None, Knockdown};
 
 public class BaseController : MonoBehaviour 
 {
@@ -206,7 +207,6 @@ public class BaseController : MonoBehaviour
 
 
 	protected virtual void Grab(int animationNumber = 8){
-		Debug.Log("Grab");
 		Vector3 center = transform.TransformPoint(attackOffset);
 		float radius = attackRadius;
 
@@ -311,12 +311,17 @@ public class BaseController : MonoBehaviour
 			StartCoroutine ("BeingThrown", damage);
 		}
 		else {
-			TakeDamage( null , transform.TransformPoint(attackOffset), transform.forward, damage);
+			TakeDamage( null , transform.TransformPoint(attackOffset), transform.forward, damage, AttackEffect.None);
 			currentState = ControllerState.Prone;
 			StartCoroutine("StandFromProne", standupDelay);
 		}
 	}
 
+	public virtual void FallProne(){
+		animator.SetTrigger ("FallProne");
+		currentState = ControllerState.Prone;
+		StartCoroutine("StandFromProne", standupDelay);
+	}
 
 	public virtual IEnumerator StandFromProne(float recoverDelay){
 		yield return new WaitForSeconds (recoverDelay);
@@ -340,7 +345,7 @@ public class BaseController : MonoBehaviour
         float radius = attackRadius;
 
 		if(currentState == ControllerState.Grappling) {
-			grappleTarget.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage());
+			grappleTarget.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage(), AttackEffect.None);
 		}
 		else {
 	       // Debug.DrawRay(center, transform.forward, Color.red, 3.5f);
@@ -360,12 +365,12 @@ public class BaseController : MonoBehaviour
 	            if (charControl == this)
 	                continue;
 
-	            charControl.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage());
+	            charControl.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage(), currentAttackInfo.GetAttackEffect());
 	        }
 		}
     }
 
-    public virtual void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount)
+    public virtual void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount, AttackEffect effect)
     {
         if ((health -= amount) <= 0)
         {

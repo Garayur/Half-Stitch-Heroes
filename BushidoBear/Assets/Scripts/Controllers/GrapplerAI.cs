@@ -27,7 +27,7 @@ public class GrapplerAI : AIBaseController {
 	}
 
 	protected override void BeginGrappling(BaseController target){
-		StopCoroutine ("Attack"); //when does this resume?
+		StopCoroutine ("Attack"); 
 		StartCoroutine ("AttackGrappledTarget");
 		base.BeginGrappling (target);
 	}

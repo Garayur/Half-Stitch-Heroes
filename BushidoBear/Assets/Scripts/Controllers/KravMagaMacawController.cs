@@ -8,8 +8,8 @@ public class KravMagaMacawController : AIBaseController {
 
 	public override void Start(){
 		base.Start();
-		rapidStrike.Add(new ComboNode(2, 3, 5, false, new ControllerActions[] { ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK }));
-		rapidStrike.Add(new ComboNode(3, 2, 5, true, new ControllerActions[] { ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK }));
+		rapidStrike.Add(new ComboNode(2, 3, 5, false, AttackEffect.None, new ControllerActions[] { ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK }));
+		rapidStrike.Add(new ComboNode(3, 2, 5, true, AttackEffect.None, new ControllerActions[] { ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK }));
 	}
 
 	protected override void TargetBlocking() {

@@ -3,18 +3,20 @@ using System.Collections;
 //individual moves in combo to be set up in TestBushido bear
 public class ComboNode 
 {
-    int length;
-    int animationNumber = 0;
-    int damage = 0;
-    bool clearsQueue = false;
-    ControllerActions[] comboSequence;
+    private int length;
+    private int animationNumber = 0;
+    private int damage = 0;
+    private bool clearsQueue = false;
+	private AttackEffect effect = AttackEffect.None;
+    private ControllerActions[] comboSequence;
 
-    public ComboNode (int length, int animNumber, int damage, bool clearsQueue, ControllerActions[] comboList)
+    public ComboNode (int length, int animNumber, int damage, bool clearsQueue, AttackEffect effect, ControllerActions[] comboList)
     {
         this.length = length;
         animationNumber = animNumber;
         this.damage = damage;
         this.clearsQueue = clearsQueue;
+		this.effect = effect;
         comboSequence = comboList;
     }
 
@@ -27,6 +29,10 @@ public class ComboNode
     {
         return animationNumber;
     }
+
+	public AttackEffect GetEffect(){
+		return effect;
+	}
 
     public bool IsLastCombo()
     {

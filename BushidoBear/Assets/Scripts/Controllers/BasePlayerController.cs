@@ -104,7 +104,6 @@ public class BasePlayerController : BaseController
 				Grab();
 			}
 			else if (Input.GetAxis("Grab") > 0) {
-				Debug.Log("Trigger pressed");
 				if(!isGrabPressed) {
 					isGrabPressed = true;
 					Grab();
@@ -149,6 +148,7 @@ public class BasePlayerController : BaseController
 
 	protected override void Grab(int animationNumber = 8){
 		base.Grab(animationNumber);
+		character.ClearComboQueue();
 		SendControllerEvent(ControllerActions.GRAB, this);
 	}
 
@@ -202,6 +202,7 @@ public class BasePlayerController : BaseController
 		case ControllerState.Grappled:
 			return false;
 		default:
+			character.ClearComboQueue();
 			BeginGrappled(grappler);
 			return true;
 		}
@@ -261,7 +262,7 @@ public class BasePlayerController : BaseController
 
         foreach (AIBaseController tar in targetList)
         {
-            tar.TakeDamage(this, center, transform.forward, 1.0f);
+            tar.TakeDamage(this, center, transform.forward, 1.0f, currentAttackInfo.GetAttackEffect());
         }
         targetList.Clear();
     }
@@ -304,18 +305,22 @@ public class BasePlayerController : BaseController
         }
     }
 
-	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount) {
+	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount, AttackEffect effect) {
 		switch (currentState) {
 		case ControllerState.Grappling:
 			grappleTarget.BreakGrapple();
 			BreakGrapple();
-			base.TakeDamage(other, hitPosition, hitDirection, amount);
+			base.TakeDamage(other, hitPosition, hitDirection, amount, AttackEffect.None);
 			break;
 		case ControllerState.Blocking:
+			character.ClearComboQueue();
 			break;
 		default:
-			//Flinch();
-			base.TakeDamage(other, hitPosition, hitDirection, amount);
+			character.ClearComboQueue();
+			if(effect == AttackEffect.Knockdown){
+				FallProne();
+			}
+			base.TakeDamage(other, hitPosition, hitDirection, amount, AttackEffect.None);
 			break;
 		}
 		

@@ -4,8 +4,8 @@ using System.Collections.Generic;
 
 public class BasePlayerCharacterController : MonoBehaviour
 {
-    protected int currentAnimationNumber = 0;
-    protected int currentDamage = 0;
+	protected AttackInformation currentAttackInformation;
+	protected float comboClearTime = 1.0f;
 
     protected Queue<ControllerActions> comboQueue = new Queue<ControllerActions>();
 
@@ -38,7 +38,7 @@ public class BasePlayerCharacterController : MonoBehaviour
             }
             else
             {
-                return new AttackInformation(currentAnimationNumber, currentDamage);
+                return currentAttackInformation;
             }
         }
         return new AttackInformation(0, 0);
@@ -61,7 +61,7 @@ public class BasePlayerCharacterController : MonoBehaviour
             }
             else
             {
-                return new AttackInformation(currentAnimationNumber, currentDamage);
+				return currentAttackInformation;
             }
         }
         return new AttackInformation(0, 0);
@@ -84,14 +84,14 @@ public class BasePlayerCharacterController : MonoBehaviour
 
     protected bool ComboCheck(List<ComboNode> nodes)
     {
-        currentAnimationNumber = -1;
+        currentAttackInformation = null;
 
         foreach (ComboNode i in nodes)
         {
             if (i.isMatchingCombo(comboQueue.ToArray()))
             {
-                currentAnimationNumber = i.GetAnimation();
-                currentDamage = i.GetDamage();
+
+				currentAttackInformation = new AttackInformation(i.GetAnimation(), i.GetDamage(), i.GetEffect());
 
                 if (i.IsLastCombo())
                 {
@@ -101,7 +101,7 @@ public class BasePlayerCharacterController : MonoBehaviour
             }
         }
 
-        if (currentAnimationNumber == -1)
+        if (currentAttackInformation == null)
         {
             ClearComboQueue();
             return false;
@@ -159,7 +159,7 @@ public class BasePlayerCharacterController : MonoBehaviour
     {
         isTimer = true;
 
-        yield return new WaitForSeconds(2.0f);
+        yield return new WaitForSeconds(comboClearTime);
 
         ClearComboQueue();
         isTimer = false;
