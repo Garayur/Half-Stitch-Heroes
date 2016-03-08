@@ -1,8 +1,8 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class AIBaseController : BaseController {
+public class BaseAIController : BaseController {
 
 	public float flinchDuration = 1.0f;
 	public float attackFrequency = 1.0f;
@@ -31,12 +31,17 @@ public class AIBaseController : BaseController {
 	
 	public delegate void AIStateChanged(AIStateData newState);
 	public static event AIStateChanged OnAIStateChange;
+	
 
-
-	public virtual void Start () {
+	public virtual void OnEnable() {
+		BasePlayerController.OnPlayerEvent += HandlePlayerEvent;
 		currentState = ControllerState.StartingAnimation;
 		isRun = true;
 		attackRadius = midAttackRange;
+	}
+	
+	public virtual void OnDisable() {
+		BasePlayerController.OnPlayerEvent -= HandlePlayerEvent;
 	}
 	
 	protected override void Update () {
@@ -66,6 +71,10 @@ public class AIBaseController : BaseController {
 		UpdateTurning();
 		UpdateMovement();
 
+	}
+
+	public ControllerState GetState(){
+		return currentState;
 	}
 	
 	
@@ -378,7 +387,6 @@ public class AIBaseController : BaseController {
 		case ControllerState.Blocking:
 			break;
 		default:
-			Debug.Log(effect);
 			if(effect == AttackEffect.Knockdown){
 				FallProne();
 			}
@@ -423,16 +431,7 @@ public class AIBaseController : BaseController {
 		}
 	}
 
-
-	void OnEnable() {
-		BasePlayerController.OnPlayerEvent += HandlePlayerEvent;
-	}
-	
-	void OnDisable() {
-		BasePlayerController.OnPlayerEvent -= HandlePlayerEvent;
-	}
-
-	protected void HandlePlayerEvent(ControllerActions action, BaseController player, List<AIBaseController> targetList){
+	protected void HandlePlayerEvent(ControllerActions action, BaseController player, List<BaseAIController> targetList){
 		if(player.gameObject == target && targetList.Contains(this)) {
 
 			switch (action) {

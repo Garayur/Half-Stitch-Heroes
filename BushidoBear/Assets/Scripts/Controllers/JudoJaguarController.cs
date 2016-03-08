@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class JudoJaguarController : AIBaseController {
+public class JudoJaguarController : BaseAIController {
 
 
 	protected override void TargetHeavyAttacking() {

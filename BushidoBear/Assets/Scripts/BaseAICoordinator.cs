@@ -2,71 +2,54 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class AICoordinator : MonoBehaviour {
+public class BaseAICoordinator : MonoBehaviour {
 
-	public List<AIBaseController> AISquad;
-	Dictionary<GameObject, List<AIBaseController>> aiTargetAssignments = new Dictionary<GameObject, List<AIBaseController>>();
+	public List<BaseAIController> AISquad;
+	Dictionary<GameObject, List<BaseAIController>> aiTargetAssignments = new Dictionary<GameObject, List<BaseAIController>>();
 
-	public float avoidanceDistance = 8;
-	public float unavailableAvoidanceDistance = 4;
+	public float avoidanceDistance = 4;
+	public float unavailableAvoidanceDistance = 2;
 	public float maxDistance = 10;
-	protected float movementUpdateInterval = 0.5f;
-	protected float timer = 0.25f;
+	protected float movementUpdateInterval = 0.3f;
 
-	public int xmin = -9;
-	public int xmax = 9;
-	public int zmin = 0;
+	public int xmin = -6;
+	public int xmax = 6;
+	public int zmin = -1;
 	public int zmax = 14;
-
-	//temp destroy with ontriggerenter when box is no longer being used to trigger begincombat
+	
 	protected bool hasBeenTriggered = false;
 
 	protected void OnEnable() {
-		AIBaseController.OnAIStateChange += CheckSquadAssignments;
+		BaseAIController.OnAIStateChange += CheckSquadAssignments;
 	}
 
 	protected void OnDisable() {
-		AIBaseController.OnAIStateChange -= CheckSquadAssignments;
+		BaseAIController.OnAIStateChange -= CheckSquadAssignments;
 	}
 
-	void OnTriggerEnter(Collider other){
+	protected virtual void OnTriggerEnter(Collider other){
 		if(!hasBeenTriggered){
 			hasBeenTriggered = true;
-			BeginCombat();
 		}
 	}
 
-	void Start() {
-		timer = movementUpdateInterval;
-	}
-
-
-	protected virtual void BeginCombat() {
-		FindPlayers();
-		AlertSquad();
-		AssignAttackers();
-		StartCoroutine ("AssignMovementVector");
-	}
-
-	protected virtual void FindPlayers() {
+	protected virtual void FindPlayers() { //might need to be updated when players can die and respawn, call on player revival?
 		foreach(GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
-			aiTargetAssignments.Add(player, new List<AIBaseController>());
+			aiTargetAssignments.Add(player, new List<BaseAIController>());
 		}
 	}
 
-	protected void DestroySelfOnSquadDeath() {
-		if(AISquad.Count <= 0) {
-			StopCoroutine("AssignMovementVector");
-			Destroy(gameObject);
-		}
+	protected virtual void DestroySelfOnSquadDeath() {
+		StopCoroutine("AssignMovementVector");
+		Destroy(this);
 	}
 
-	protected void AssignAIToTarget(GameObject target) {
-		AIBaseController closestAIToTarget = null;
+	protected virtual void AssignAIToTarget(GameObject target) {
+		BaseAIController closestAIToTarget = null;
 		float closestDistanceToTarget = 1000f;
 		float temporaryDistanceToTarget;
 
-		foreach (AIBaseController AI in AISquad){
+		foreach (BaseAIController AI in AISquad){
 			if(AI.IsAvailable()) {
 				temporaryDistanceToTarget = Vector3.Distance(AI.gameObject.transform.position, target.transform.position);
 
@@ -83,14 +66,14 @@ public class AICoordinator : MonoBehaviour {
 
 	}
 
-	protected void AssignAttackers() {
+	protected virtual void AssignAttackers() { 
 		foreach(GameObject target in aiTargetAssignments.Keys) {
 			if(aiTargetAssignments[target].Count <= 0)
 				AssignAIToTarget(target);
 		}
 	}
 
-	protected void ReassignAI(AIBaseController ai, GameObject target) {
+	protected virtual void ReassignAI(BaseAIController ai, GameObject target) {
 		if(target != null) {
 			aiTargetAssignments[target].Remove(ai);
 			if(aiTargetAssignments[target].Count <= 0)
@@ -98,16 +81,11 @@ public class AICoordinator : MonoBehaviour {
 		}
 	}
 
-	protected void AlertSquad(){
-		foreach (AIBaseController ai in AISquad) {
-			ai.AssignCenterPoint(new Vector2((xmax + xmin) /2, (zmax + zmin) / 2));
-			ai.StartCombatPositioning();
-		}
-
-		StartCoroutine ("AssignMovementVector");
+	protected virtual void AlertSquad(){
 	}
 
-	protected void CheckSquadAssignments(AIStateData aiState) {
+	//update with new states
+	protected virtual void CheckSquadAssignments(AIStateData aiState) {
 		if(AISquad.Contains(aiState.owner)) {
 
 			switch (aiState.state) {
@@ -143,7 +121,7 @@ public class AICoordinator : MonoBehaviour {
 
 		centroid = CalculateCentroid();
 
-		foreach(AIBaseController ai in AISquad){
+		foreach(BaseAIController ai in AISquad){
 			if(ai.IsAvailable()) {
 				movementVector = CalculateMovementVector(centroid, CalculateRepulsion(ai.gameObject), ai.gameObject);
 				movementVector = ApplyBoundaries(movementVector, ai.gameObject);
@@ -155,21 +133,16 @@ public class AICoordinator : MonoBehaviour {
 
 	}
 
-	protected Vector3 CalculateCentroid() {
+	protected virtual Vector3 CalculateCentroid() {
 		Vector3 centroid = Vector3.zero;
 		int count = 0;
 
-		foreach (AIBaseController ai in AISquad) {
+		foreach (BaseAIController ai in AISquad) {
 			if(ai.IsAvailable()) {
 				centroid += ai.gameObject.transform.position;
 				count++;
 			}
 		}
-
-//		foreach (GameObject player in aiTargetAssignments.Keys ) {
-//			centroid += player.transform.position;
-//			count++;
-//		}
 
 		centroid.x = centroid.x / count;
 		centroid.y = 0;
@@ -178,10 +151,10 @@ public class AICoordinator : MonoBehaviour {
 		return centroid;
 	}
 
-	protected Vector3 CalculateRepulsion(GameObject primary) {
+	protected virtual Vector3 CalculateRepulsion(GameObject primary) {
 		Vector3 repulsion = Vector3.zero;
 
-		foreach (AIBaseController ai in AISquad) {
+		foreach (BaseAIController ai in AISquad) {
 			if(ai.gameObject != primary) {
 				if(AITooClose(primary, ai)) {
 					repulsion += primary.transform.position - ai.gameObject.transform.position;
@@ -193,7 +166,7 @@ public class AICoordinator : MonoBehaviour {
 
 	}
 
-	protected Vector3 CalculateMovementVector(Vector3 centroid, Vector3 repulsion, GameObject primary) {
+	protected virtual Vector3 CalculateMovementVector(Vector3 centroid, Vector3 repulsion, GameObject primary) {
 		Vector3 movementVector = Vector3.zero;
 
 		if(Vector3.Distance(centroid, primary.transform.position) > maxDistance) {
@@ -206,7 +179,7 @@ public class AICoordinator : MonoBehaviour {
 	}
 
 
-	protected bool AITooClose(GameObject primary, AIBaseController secondary){
+	protected virtual bool AITooClose(GameObject primary, BaseAIController secondary){
 		float distance;
 
 		if(secondary.IsAvailable())
@@ -221,7 +194,7 @@ public class AICoordinator : MonoBehaviour {
 		}
 	}
 
-	protected Vector3 ApplyBoundaries(Vector3 movementVector, GameObject ai) {
+	protected virtual Vector3 ApplyBoundaries(Vector3 movementVector, GameObject ai) {
 		if(ai.transform.position.x < xmin) {
 			movementVector.x = 10;
 		}

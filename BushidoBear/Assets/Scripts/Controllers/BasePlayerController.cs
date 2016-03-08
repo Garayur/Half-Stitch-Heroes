@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public class BasePlayerController : BaseController
 {
-    public delegate void PlayerAction(ControllerActions controllerAction, BaseController player, List<AIBaseController> targetList);
+    public delegate void PlayerAction(ControllerActions controllerAction, BaseController player, List<BaseAIController> targetList);
     public static event PlayerAction OnPlayerEvent;
 
     public BasePlayerCharacterController character;
@@ -14,7 +14,7 @@ public class BasePlayerController : BaseController
 	protected bool isGrabPressed =  false;
 	protected bool isRightTriggerPressed = false;
     protected int gamePad;
-    protected List<AIBaseController> targetList = new List<AIBaseController>();
+    protected List<BaseAIController> targetList = new List<BaseAIController>();
 	protected int grip = 0;
 	protected int defaultPlayerGrip = 10;
 	protected int defaultNPCGrip = 5;
@@ -260,7 +260,7 @@ public class BasePlayerController : BaseController
         //deal damage to all in target list then clear
         Vector3 center = transform.TransformPoint(Vector3.zero);
 
-        foreach (AIBaseController tar in targetList)
+        foreach (BaseAIController tar in targetList)
         {
             tar.TakeDamage(this, center, transform.forward, 1.0f, currentAttackInfo.GetAttackEffect());
         }
@@ -294,7 +294,7 @@ public class BasePlayerController : BaseController
         //------------------------
         foreach (Collider col in cols)
         {
-            AIBaseController charControl = col.GetComponent<AIBaseController>();
+            BaseAIController charControl = col.GetComponent<BaseAIController>();
             if (charControl == null)
                 continue;
 

@@ -1,13 +1,14 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class KravMagaMacawController : AIBaseController {
+public class KravMagaMacawController : BaseAIController {
 
 	List<ComboNode> rapidStrike = new List<ComboNode>();
 
-	public override void Start(){
-		base.Start();
+	public override void OnEnable ()
+	{
+		base.OnEnable ();
 		rapidStrike.Add(new ComboNode(2, 3, 5, false, AttackEffect.None, new ControllerActions[] { ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK }));
 		rapidStrike.Add(new ComboNode(3, 2, 5, true, AttackEffect.None, new ControllerActions[] { ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK }));
 	}

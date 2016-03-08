@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class GrapplerAI : AIBaseController {
+public class GrapplerAI : BaseAIController {
 
 
 	//main attack style is grappling player
@@ -12,7 +12,7 @@ public class GrapplerAI : AIBaseController {
 	public float grapplingAttackFrequency = 1.0f;
 
 	void Reset(){
-		attackFrequency = 2.0f;
+		attackFrequency = 3.0f;
 	}
 
 	protected override IEnumerator Attack() {
