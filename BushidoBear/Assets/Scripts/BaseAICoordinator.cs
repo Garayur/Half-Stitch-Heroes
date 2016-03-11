@@ -10,20 +10,25 @@ public class BaseAICoordinator : MonoBehaviour {
 	public float avoidanceDistance = 4;
 	public float unavailableAvoidanceDistance = 2;
 	public float maxDistance = 10;
-	protected float movementUpdateInterval = 0.3f;
 
 	public int xmin = -6;
 	public int xmax = 6;
 	public int zmin = -1;
 	public int zmax = 14;
-	
+
+	public delegate void CoordinatorDead (BaseAICoordinator coordinator);
+	public static CoordinatorDead CoordinatorDeath; 
+
+	protected float movementUpdateInterval = 0.3f;
 	protected bool hasBeenTriggered = false;
 
-	protected void OnEnable() {
+
+
+	protected virtual void OnEnable() {
 		BaseAIController.OnAIStateChange += CheckSquadAssignments;
 	}
 
-	protected void OnDisable() {
+	protected virtual void OnDisable() {
 		BaseAIController.OnAIStateChange -= CheckSquadAssignments;
 	}
 
@@ -40,6 +45,7 @@ public class BaseAICoordinator : MonoBehaviour {
 	}
 
 	protected virtual void DestroySelfOnSquadDeath() {
+		CoordinatorDeath (this);
 		StopCoroutine("AssignMovementVector");
 		Destroy(this);
 	}

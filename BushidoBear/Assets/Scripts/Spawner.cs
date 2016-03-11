@@ -9,18 +9,30 @@ public class Spawner : BaseAICoordinator {
 	public GameObject mob;
 	public GameObject spawnPoint;
 	public enum Trigger {CollisionBox, AICoordinatorDeath, };
+	public Trigger triggerType;
+	public BaseAICoordinator targetDeathTriggerCoordinator;
 
 	protected int spawnDecrementer = 0;
 
 
 
-	protected void Start(){
+	protected void Enable(){
 		spawnDecrementer = quantity;
+	}
+
+	protected override void OnEnable() {
+		base.OnEnable ();
+		BaseAICoordinator.CoordinatorDeath += CoordinatorDeathEvent;
+	}
+	
+	protected override void OnDisable() {
+		base.OnDisable();
+		BaseAICoordinator.CoordinatorDeath += CoordinatorDeathEvent;
 	}
 
 
 	protected override void OnTriggerEnter(Collider other){
-		if(!hasBeenTriggered){
+		if(!hasBeenTriggered && triggerType == Trigger.CollisionBox){
 			StartCoroutine ("BeginSpawning");
 			base.OnTriggerEnter (other);
 		}
@@ -54,6 +66,18 @@ public class Spawner : BaseAICoordinator {
 	protected override void DestroySelfOnSquadDeath() {
 		if (AISquad.Count <= 0 && spawnDecrementer > 0) {
 			base.DestroySelfOnSquadDeath();
+		}
+	}
+
+	protected virtual void CoordinatorDeathEvent(BaseAICoordinator coordinator){
+		if (triggerType == Trigger.AICoordinatorDeath) {
+			if(targetDeathTriggerCoordinator != null){
+				if(targetDeathTriggerCoordinator == coordinator)
+					StartCoroutine ("BeginSpawning");
+			}
+			else{
+				StartCoroutine ("BeginSpawning");
+			}
 		}
 	}
 	
