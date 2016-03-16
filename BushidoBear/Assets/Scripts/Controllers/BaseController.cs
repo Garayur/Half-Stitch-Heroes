@@ -174,10 +174,10 @@ public class BaseController : MonoBehaviour
 		momentum.z -= dragVector.z * Time.deltaTime;
 		momentum.y += gravity * Time.deltaTime;
 
-		if (momentum.x < 0)
+		if (momentum.x < 0.5f && momentum.x > -0.5f)
 			momentum.x = 0;
 
-		if (momentum.z < 0)
+		if (momentum.z < 0.5f && momentum.z > -0.5f)
 			momentum.z = 0;
 
 		if (momentum.y < 0)
