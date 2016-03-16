@@ -26,6 +26,13 @@ public class BaseController : MonoBehaviour
     public float lightAttackDamage = 5f;
     public float heavyAttackDamage = 10f;
 
+	protected Vector3 throwForce = new Vector3 (12, 15, 12);
+	protected float gravity = -9.8f;
+	protected float drag = 10.0f;
+	protected Vector3 momentum;
+	protected float charStandingHeight = 2.18f;
+	protected float charLayingHeight = 0.5f;
+
     public GameObject m_hitEffect = null;
 
     public string[] damageReaction;
@@ -46,7 +53,6 @@ public class BaseController : MonoBehaviour
 
 	protected BaseController grappledBy;
 	protected BaseController grappleTarget;
-	protected Vector3 throwForce;
 
     //---------------
     // private
@@ -82,20 +88,20 @@ public class BaseController : MonoBehaviour
         //------------------
         //Update Control
         //------------------
-        if (enableControl == true)
-        {
-            moveSpeedScale = animator.GetFloat("SpeedScale");
-            UpdateMoveControl();
-        }
+        if (enableControl == true) {
+			moveSpeedScale = animator.GetFloat ("SpeedScale");
+			UpdateMoveControl ();
+		} 
 
-        isJumping = charController.isGrounded;
-
+		UpdatePhysics();
         UpdateTurning();
         UpdateMovement();
         UpdateAnimationVariables();
-    }
 
-    protected virtual void FixedUpdate()
+		isJumping = charController.isGrounded;
+	}
+	
+	protected virtual void FixedUpdate()
     {
         airTime = animator.GetBool("Ground") ? 0.0f : airTime + Time.deltaTime;
     }
@@ -157,13 +163,42 @@ public class BaseController : MonoBehaviour
             turnDirection *= runSpeedScale;
         }
 
-        // default gravity
-        movementVector = Vector3.down * 0.5f * Time.deltaTime;
-
         speed = moveDirection.magnitude;
         if (isRun == true) speed *= runSpeedScale;
     }
 
+	protected virtual void ApplyMomentum(){
+		Vector3 dragVector = momentum.normalized;
+		dragVector *= drag;
+		momentum.x -=  dragVector.x * Time.deltaTime;
+		momentum.z -= dragVector.z * Time.deltaTime;
+		momentum.y += gravity * Time.deltaTime;
+
+		if (momentum.x < 0)
+			momentum.x = 0;
+
+		if (momentum.z < 0)
+			momentum.z = 0;
+
+		if (momentum.y < 0)
+			momentum.y = 0;
+
+		movementVector += momentum * Time.deltaTime;
+	}
+
+	protected virtual void ApplyGravity(){
+		movementVector.y += gravity * Time.deltaTime;
+	}
+
+	protected virtual void UpdatePhysics(){
+		ApplyGravity ();
+		if (!enableControl)
+			ApplyMomentum ();
+	}
+
+	public virtual void AddForce(Vector3 force){
+		momentum += force;
+	}
 
     //================================================
     //ControllerActions
@@ -189,6 +224,8 @@ public class BaseController : MonoBehaviour
 	{
 		if (charController.isGrounded)
 		{
+			enableControl = false;
+			AddForce(new Vector3(0, 14, 0));
 			animator.SetTrigger("Jump");
 			h = 0;
 			v = 0;
@@ -197,7 +234,12 @@ public class BaseController : MonoBehaviour
 	}
 
 	public virtual void JumpEnded() {
+		enableControl = true;
 		currentState = ControllerState.Positioning;
+	}
+
+	public ControllerState GetState(){
+		return currentState;
 	}
 
 
@@ -286,26 +328,25 @@ public class BaseController : MonoBehaviour
 	}
 
 	public virtual void ThrowGrapple(){
-		Vector3 throwForce;
-		throwForce = grappleTarget.transform.position - gameObject.transform.position;
-		throwForce.Normalize ();
-		throwForce = new Vector3 (throwForce.x * 11, 8, throwForce.z * 11);
+		Vector3 throwVector;
+		throwVector = grappleTarget.transform.position - gameObject.transform.position;
+		throwVector.Normalize ();
+		throwVector = new Vector3 (throwVector.x * throwForce.x, throwForce.y, throwVector.z * throwForce.z);
 		grappleTarget.BreakGrapple();
 		BreakGrapple();
-		grappleTarget.GetThrown (throwForce, currentAttackInfo.GetAttackDamage());
+		grappleTarget.GetThrown (throwVector, currentAttackInfo.GetAttackDamage());
 	}
 	
 	public virtual void GetThrown(Vector3 force, int damage) {
-		throwForce = force;
-		charController.Move (new Vector3 (0,0.1f,0));
+		AddForce (force);
+		enableControl = false;
+		charController.height = charLayingHeight;
 		animator.SetTrigger ("Thrown");
 		StartCoroutine ("BeingThrown", damage);
 		currentState = ControllerState.Thrown;
 	}
 
 	public virtual IEnumerator BeingThrown(int damage) {
-		throwForce.y += Physics.gravity.y * Time.deltaTime;
-		charController.Move (throwForce * Time.deltaTime);
 		yield return null;
 		if (!charController.isGrounded) {
 			StartCoroutine ("BeingThrown", damage);
@@ -320,16 +361,20 @@ public class BaseController : MonoBehaviour
 	public virtual void FallProne(){
 		animator.SetTrigger ("FallProne");
 		currentState = ControllerState.Prone;
+		charController.height = charLayingHeight;
 		StartCoroutine("StandFromProne", standupDelay);
 	}
 
 	public virtual IEnumerator StandFromProne(float recoverDelay){
 		yield return new WaitForSeconds (recoverDelay);
+		charController.height = charStandingHeight;
 		currentState = ControllerState.Standing;
-		animator.SetTrigger ("Stand"); 
+		animator.SetTrigger ("Stand");
+		charController.height = charStandingHeight;
 	}
 
 	public virtual void ResumeCombat(){
+		enableControl = true;
 		currentState = ControllerState.Positioning;
 	}
 	 

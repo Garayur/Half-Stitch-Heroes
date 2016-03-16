@@ -12,7 +12,7 @@ public class GrapplerAI : BaseAIController {
 	public float grapplingAttackFrequency = 1.0f;
 
 	void Reset(){
-		attackFrequency = 3.0f;
+		attackFrequency = 4.0f;
 	}
 
 	protected override IEnumerator Attack() {

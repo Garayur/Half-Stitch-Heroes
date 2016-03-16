@@ -98,23 +98,15 @@ public class BaseAICoordinator : MonoBehaviour {
 			case ControllerState.StartingAnimation:
 				AlertSquad();
 				break;
-			case ControllerState.Positioning:
-				ReassignAI(aiState.owner, aiState.target);
-				break;
 			case ControllerState.Attacking:
-				break;
-			case ControllerState.Flinching:
-				ReassignAI(aiState.owner, aiState.target);
-				break;
-			case ControllerState.Prone:
-				ReassignAI(aiState.owner, aiState.target);
-				break;
-			case ControllerState.Dying:
-				ReassignAI(aiState.owner, aiState.target);
+			case ControllerState.Grappled:
 				break;
 			case ControllerState.Dead:
 				AISquad.Remove(aiState.owner);
 				DestroySelfOnSquadDeath();
+				break;
+			default:
+				ReassignAI(aiState.owner, aiState.target);
 				break;
 			}
 

@@ -73,10 +73,6 @@ public class BaseAIController : BaseController {
 
 	}
 
-	public ControllerState GetState(){
-		return currentState;
-	}
-	
 	
 	protected virtual void StartAnimation() {
 
@@ -257,6 +253,14 @@ public class BaseAIController : BaseController {
 		base.ThrowGrapple ();
 	}
 
+	public void OnCollisionEnter(Collision hit) {
+
+	//	if (hit.gameObject.GetComponent<BaseController> ().GetState () == ControllerState.Thrown) {
+		Debug.Log(hit);
+			//collide
+	//	}
+	}
+
 	public override bool GetGrabbed(BaseController grappler){
 		switch(currentState) {
 		case ControllerState.Dead:
@@ -372,6 +376,9 @@ public class BaseAIController : BaseController {
 		switch (currentState) {
 		case ControllerState.StartingAnimation:
 			SendStateChangeEvent();
+			if(effect == AttackEffect.Knockdown){
+				FallProne();
+			}
 			base.TakeDamage(other, hitPosition, hitDirection, amount, effect);
 			break;
 		case ControllerState.Grappled:
@@ -382,6 +389,9 @@ public class BaseAIController : BaseController {
 		case ControllerState.Grappling:
 			grappleTarget.BreakGrapple();
 			BreakGrapple();
+			if(effect == AttackEffect.Knockdown){
+				FallProne();
+			}
 			base.TakeDamage(other, hitPosition, hitDirection, amount, effect);
 			break;
 		case ControllerState.Blocking:
