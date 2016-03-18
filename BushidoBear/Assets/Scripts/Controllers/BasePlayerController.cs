@@ -29,6 +29,7 @@ public class BasePlayerController : BaseController
 		currentState = ControllerState.Positioning;
 		loosenGripStartingTime = 0.5f;
 		loosenGripDecrementAmount = 0.01f;
+		reactsToCollision = false;
 	}
 
     override protected void Update()

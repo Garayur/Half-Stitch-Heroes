@@ -33,6 +33,8 @@ public class BaseController : MonoBehaviour
 	protected float charStandingHeight = 2.18f;
 	protected float charLayingHeight = 0.5f;
 
+	protected bool reactsToCollision = true;
+
     public GameObject m_hitEffect = null;
 
     public string[] damageReaction;
@@ -355,6 +357,28 @@ public class BaseController : MonoBehaviour
 			TakeDamage( null , transform.TransformPoint(attackOffset), transform.forward, damage, AttackEffect.None);
 			currentState = ControllerState.Prone;
 			StartCoroutine("StandFromProne", standupDelay);
+		}
+	}
+
+	public void OnControllerColliderHit(ControllerColliderHit hit){
+		if (currentState == ControllerState.Thrown) {
+			if (hit.gameObject.GetComponent<BaseController> () != null) {
+				CollideWithController (hit.gameObject.GetComponent<BaseController> ());
+			}
+		}
+	}
+
+	protected void CollideWithController(BaseController collisionTarget){
+		if (collisionTarget.reactsToCollision && collisionTarget.GetState() != ControllerState.Thrown) {
+			Vector3 force;
+			force = Vector3.Normalize (collisionTarget.gameObject.transform.position - gameObject.transform.position);
+			force.y = 0;
+			force *= momentum.magnitude * 0.8f;
+			force.y = 8;
+			collisionTarget.GetThrown (force, 5);
+		} 
+		else {
+			momentum = Vector3.zero;
 		}
 	}
 

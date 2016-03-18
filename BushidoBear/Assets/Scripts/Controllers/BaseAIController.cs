@@ -252,20 +252,18 @@ public class BaseAIController : BaseController {
 		currentAttackInfo = grappleThrowAttackInfo;
 		base.ThrowGrapple ();
 	}
-
-	public void OnCollisionEnter(Collision hit) {
-
-	//	if (hit.gameObject.GetComponent<BaseController> ().GetState () == ControllerState.Thrown) {
-		Debug.Log(hit);
-			//collide
-	//	}
-	}
+		
 
 	public override bool GetGrabbed(BaseController grappler){
 		switch(currentState) {
 		case ControllerState.Dead:
 		case ControllerState.Dying:
 		case ControllerState.Prone:
+		case ControllerState.Grappling:
+			grappleTarget.BreakGrapple ();
+			BreakGrapple ();
+			BeginGrappled (grappler);
+			return true;
 		case ControllerState.Grappled:
 			return false;
 		case ControllerState.Flinching:
