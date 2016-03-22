@@ -29,6 +29,7 @@ public class BasePlayerController : BaseController
 		currentState = ControllerState.Positioning;
 		loosenGripStartingTime = 0.5f;
 		loosenGripDecrementAmount = 0.01f;
+		moveSpeed = 4.5f;
 		reactsToCollision = false;
 	}
 
@@ -36,24 +37,24 @@ public class BasePlayerController : BaseController
     {
 		switch (currentState) {
 		case ControllerState.Grappling:
-			if (Input.GetButtonDown ("Light Attack")) {
+			if (Input.GetButtonDown ("Light Attack" + gamePad)) {
 				HitGrappleTarget ();
 				grip++;
 			}
 			
-			if (Input.GetButtonDown ("Heavy Attack")) {
-				if(Input.GetAxisRaw("Horizontal") > 0){
+			if (Input.GetButtonDown ("Heavy Attack" + gamePad)) {
+				if(Input.GetAxisRaw("Horizontal" + gamePad) > 0){
 					tH = 1;
 					grappleTarget.transform.position = gameObject.transform.position + new Vector3(1.5f, 0, 0);
 				}
-				else if(Input.GetAxisRaw("Horizontal") < 0){
+				else if(Input.GetAxisRaw("Horizontal" + gamePad) < 0){
 					tH = -1;
 					grappleTarget.transform.position = gameObject.transform.position + new Vector3(-1.5f, 0, 0);
 				}
 				ThrowGrapple ();
 			}
 			
-			if (Input.GetButtonDown ("Defend")) {
+			if (Input.GetButtonDown ("Defend" + gamePad)) {
 				grip++;
 				if (grip > maxGrip)
 					grip = maxGrip;
@@ -61,18 +62,18 @@ public class BasePlayerController : BaseController
 			}
 			break;
 		case ControllerState.Grappled:
-			if (Input.GetButtonDown ("Defend")) {
+			if (Input.GetButtonDown ("Defend" + gamePad)) {
 				grip--;
 				if (grip <= 0) {
 					grappledBy.BreakGrapple ();
 					BreakGrapple ();
-					StopCoroutine ("BreakGrip");
+					StopCoroutine ("BreakGrip" + gamePad);
 				}
 				//press repeatedly to break grip
 			}
 			break;
 		case ControllerState.Blocking:
-			if(Input.GetButtonUp("Defend"))
+			if(Input.GetButtonUp("Defend" + gamePad))
 			{
 				EndBlock();
 			}
@@ -83,28 +84,28 @@ public class BasePlayerController : BaseController
 		case ControllerState.Jumping:
 			break;
 		default:
-			h = Input.GetAxisRaw("Horizontal");
-			v = Input.GetAxisRaw("Vertical");
+			h = Input.GetAxisRaw("Horizontal" + gamePad);
+			v = Input.GetAxisRaw("Vertical" + gamePad);
 			
 			tH = h;
 			tV = v;
 
-			if(Input.GetButtonDown("Jump")){
+			if(Input.GetButtonDown("Jump" + gamePad)){
 				Jump();
 			}
-			else if(Input.GetButtonDown("Light Attack")){
+			else if(Input.GetButtonDown("Light Attack" + gamePad)){
 				LightAttack();
 			}
-			else if(Input.GetButtonDown("Heavy Attack")){
+			else if(Input.GetButtonDown("Heavy Attack" + gamePad)){
 				HeavyAttack();
 			}
-			else if(Input.GetButtonDown("Defend")){
+			else if(Input.GetButtonDown("Defend" + gamePad)){
 				Block();
 			}
-			else if(Input.GetButtonDown("Grab")) {
+			else if(Input.GetButtonDown("Grab" + gamePad)) {
 				Grab();
 			}
-			else if (Input.GetAxis("Grab") > 0) {
+			else if (Input.GetAxis("Grab" + gamePad) > 0) {
 				if(!isGrabPressed) {
 					isGrabPressed = true;
 					Grab();
