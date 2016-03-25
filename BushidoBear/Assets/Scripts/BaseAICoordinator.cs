@@ -11,13 +11,10 @@ public class BaseAICoordinator : MonoBehaviour {
 	public float unavailableAvoidanceDistance = 2;
 	public float maxDistance = 10;
 
-	public int xmin = -6;
-	public int xmax = 6;
-	public int zmin = -1;
-	public int zmax = 14;
+	protected CombatBoundaries boundaries = new CombatBoundaries();
 
 	public delegate void CoordinatorDead (BaseAICoordinator coordinator);
-	public static CoordinatorDead CoordinatorDeath; 
+	public static event CoordinatorDead CoordinatorDeath; 
 
 	protected float movementUpdateInterval = 0.3f;
 	protected bool hasBeenTriggered = false;
@@ -102,8 +99,10 @@ public class BaseAICoordinator : MonoBehaviour {
 			case ControllerState.Grappled:
 				break;
 			case ControllerState.Dead:
+				Debug.Log (AISquad.Count);
 				AISquad.Remove(aiState.owner);
-				DestroySelfOnSquadDeath();
+				if(AISquad.Count <= 0)
+					DestroySelfOnSquadDeath();
 				break;
 			default:
 				ReassignAI(aiState.owner, aiState.target);
@@ -193,21 +192,25 @@ public class BaseAICoordinator : MonoBehaviour {
 	}
 
 	protected virtual Vector3 ApplyBoundaries(Vector3 movementVector, GameObject ai) {
-		if(ai.transform.position.x < xmin) {
+		if(ai.transform.position.x < boundaries.leftBoundary) {
 			movementVector.x = 10;
 		}
-		else if(ai.transform.position.x > xmax) {
+		else if(ai.transform.position.x > boundaries.rightBoundary) {
 			movementVector.x = -10;
 		}
 
-		if(ai.transform.position.z < zmin) {
+		if(ai.transform.position.z < boundaries.closeBoundary) {
 			movementVector.z = 10;
 		}
-		else if (ai.transform.position.z > zmax) {
+		else if (ai.transform.position.z > boundaries.farBoundary) {
 			movementVector.z = -10;
 		}
 
 		return movementVector;
+	}
+
+	public virtual void AssignBoundaries(CombatBoundaries boundaries){
+		this.boundaries = boundaries;
 	}
 				
 }

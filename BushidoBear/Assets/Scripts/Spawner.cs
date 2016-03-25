@@ -58,7 +58,7 @@ public class Spawner : BaseAICoordinator {
 
 	protected void AddAI(BaseAIController newAI){
 		AISquad.Add (newAI);
-		newAI.AssignCenterPoint(new Vector2((xmax + xmin) /2, (zmax + zmin) / 2));
+		newAI.AssignCenterPoint(new Vector2((boundaries.leftBoundary + boundaries.rightBoundary) /2, (boundaries.leftBoundary + boundaries.rightBoundary) / 2));
 		newAI.StartCombatPositioning();
 		AssignAttackers ();
 	}

@@ -18,16 +18,11 @@ public class AISquad : BaseAICoordinator {
 		AssignAttackers();
 		StartCoroutine ("AssignMovementVector");
 	}
-
-	protected override void DestroySelfOnSquadDeath() {
-		if(AISquad.Count <= 0) {
-			base.DestroySelfOnSquadDeath();
-		}
-	}
+		
 
 	protected override void AlertSquad(){
 		foreach (BaseAIController ai in AISquad) {
-			ai.AssignCenterPoint(new Vector2((xmax + xmin) /2, (zmax + zmin) / 2));
+			ai.AssignCenterPoint(new Vector2((boundaries.leftBoundary + boundaries.rightBoundary) /2, (boundaries.leftBoundary + boundaries.rightBoundary) / 2));
 			ai.StartCombatPositioning();
 		}
 		

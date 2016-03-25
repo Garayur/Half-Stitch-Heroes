@@ -4,11 +4,8 @@ using System.Collections.Generic;
 
 public class OrthographicGroupCamera : MonoBehaviour {
 
-	public float leftBoundary;
-	public float rightBoundary;
-	public float topBoundary;
-	public float bottomBoundary;
-
+	private CombatBoundaries boundaries = new CombatBoundaries();
+	private bool useBoundaries = false;
 	private List<Transform> players = new List<Transform>();
 	private Vector3 centroid;
 	private float minCameraSize = 7;
@@ -43,9 +40,14 @@ public class OrthographicGroupCamera : MonoBehaviour {
 		rotatedCentroid = Quaternion.AngleAxis (-Camera.main.transform.eulerAngles.x, Vector3.right) * centroid;
 		rotatedCentroid.y += yOffset;
 
-		cameraPosition.x = Mathf.Clamp (centroid.x, leftBoundary + cameraWidth / 2, rightBoundary - cameraWidth / 2);
-		cameraPosition.y = Mathf.Clamp (rotatedCentroid.y, bottomBoundary, topBoundary);
-	
+		if (useBoundaries) {
+			cameraPosition.x = Mathf.Clamp (centroid.x, boundaries.leftBoundary + cameraWidth / 2, boundaries.rightBoundary - cameraWidth / 2);
+		} 
+		else {
+			cameraPosition.x = centroid.x;
+		}
+		cameraPosition.y = Mathf.Clamp (rotatedCentroid.y, boundaries.closeBoundary, boundaries.farBoundary);
+
 		Camera.main.transform.position = cameraPosition;
 	}
 		
@@ -77,5 +79,14 @@ public class OrthographicGroupCamera : MonoBehaviour {
 				}
 			}
 		}
+	}
+
+	public void AssignBoundaries(CombatBoundaries boundaries){
+		this.boundaries = boundaries;
+		useBoundaries = true;
+	}
+
+	public void ClearBoundaries(){
+		useBoundaries = false;
 	}
 }
