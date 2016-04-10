@@ -16,6 +16,7 @@ public class BasePlayerController : BaseController
     protected int gamePad;
     protected List<BaseAIController> targetList = new List<BaseAIController>();
 	protected int grip = 0;
+	public int getGrip{get{return grip;}}
 	protected int defaultPlayerGrip = 10;
 	protected int defaultNPCGrip = 5;
 	protected int maxGrip = 20;
@@ -194,6 +195,8 @@ public class BasePlayerController : BaseController
 		currentState = ControllerState.Positioning;
 		StopCoroutine ("EscapeGrip");
 		StopCoroutine ("LoosenGrip");
+		//End grapple visual indication
+		GrappleIndicationHandler.EndGrapple(gameObject);
 	}
 
 	public override bool GetGrabbed(BaseController grappler){
@@ -216,6 +219,8 @@ public class BasePlayerController : BaseController
 		grip = defaultPlayerGrip;
 		loosenGripTimer = loosenGripStartingTime;
 		StartCoroutine ("LoosenGrip");
+		//Display grapple indicator
+		GrappleIndicationHandler.BeginGrapple(gameObject,target.gameObject,true);
 	}
 
 	protected override void BeginGrappled (BaseController grappler)
@@ -224,6 +229,11 @@ public class BasePlayerController : BaseController
 		grip = defaultNPCGrip;
 		loosenGripTimer = loosenGripStartingTime;
 		StartCoroutine ("EscapeGrip");
+		//Display grapple indicator, if player is grappling player allow player initiating grapple to handle display
+		if(!(grappler is BasePlayerController))
+		{
+			GrappleIndicationHandler.BeginGrapple(grappler.gameObject,gameObject,false);
+		}
 	}
 
 	public virtual IEnumerator LoosenGrip() {
