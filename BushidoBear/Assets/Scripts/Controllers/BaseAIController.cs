@@ -23,6 +23,7 @@ public class BaseAIController : BaseController {
 
 	protected AttackInformation lightAttackInfo = new AttackInformation(2, 5);
 	protected AttackInformation heavyAttackInfo = new AttackInformation(1, 10);
+	protected AttackInformation rangedAttackInfo = new AttackInformation(2, 5);
 	protected AttackInformation grapplePunchAttackInfo = new AttackInformation(2, 5);
 	protected AttackInformation grappleThrowAttackInfo = new AttackInformation (2, 5);
 
@@ -351,6 +352,13 @@ public class BaseAIController : BaseController {
 		animator.SetInteger("Action", animationNumber);
 	}
 
+	protected virtual void RangedAttack(int animationNumber = -1){
+		currentAttackInfo = rangedAttackInfo;
+		if(animationNumber < 0)
+			animationNumber = rangedAttackInfo.GetAnimationNumber();
+		animator.SetInteger("Action", animationNumber); 
+	}
+
 	protected override void HitGrappleTarget(int animationNumber = -1) {
 		currentAttackInfo = grapplePunchAttackInfo;
 		if(animationNumber < 0)
@@ -367,6 +375,26 @@ public class BaseAIController : BaseController {
 	protected override void EndBlock(){
 		currentState = ControllerState.Positioning;
 		base.EndBlock ();
+	}
+
+	//called by throw animation
+	protected virtual void SpawnProjectile(){
+		GameObject tempProjectile;
+
+		tempProjectile = (GameObject)Instantiate (projectile, gameObject.transform.position + projectileRelativeSpawnPosition, Quaternion.identity);
+		tempProjectile.GetComponent<ProjectileScript> ().Initialize (this, currentAttackInfo.GetAttackDamage());
+		tempProjectile.GetComponent<Rigidbody> ().AddForce (CalculateProjectileVector(), ForceMode.VelocityChange);
+	}
+
+	protected virtual Vector3 CalculateProjectileVector(){
+		Vector3 projectileVector;
+		projectileVector = target.transform.position - gameObject.transform.position;
+		projectileVector.y = 0;
+		projectileVector.Normalize ();
+		projectileVector *= projectileForce.x;
+		projectileVector.y = projectileForce.y;
+
+		return projectileVector;
 	}
 	
 	

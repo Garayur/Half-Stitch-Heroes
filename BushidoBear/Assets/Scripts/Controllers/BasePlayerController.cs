@@ -237,7 +237,6 @@ public class BasePlayerController : BaseController
 	}
 
 	public virtual IEnumerator LoosenGrip() {
-		Debug.Log ("Grip is Loosening");
 		yield return new WaitForSeconds (loosenGripTimer);
 		grip--;
 		if (grip <= 0) {
@@ -249,20 +248,17 @@ public class BasePlayerController : BaseController
 			loosenGripTimer -= loosenGripDecrementAmount;
 			if(loosenGripTimer <= loosenGripDecrementAmount){
 				loosenGripTimer = loosenGripDecrementAmount;
-				Debug.Log("Grapple break attempts at peak");
 			}
 			StartCoroutine ("LoosenGrip");
 		}
 	}
 
 	public virtual IEnumerator EscapeGrip() {
-		Debug.Log ("Grip is breaking");
 		yield return new WaitForSeconds (loosenGripTimer);
 		grip++;
 		loosenGripTimer -= loosenGripDecrementAmount;
 		if(loosenGripTimer <= loosenGripDecrementAmount){
 			loosenGripTimer = loosenGripDecrementAmount;
-			Debug.Log("Grapple break attempts at peak");
 		}
 		StartCoroutine ("EscapeGrip");
 	}

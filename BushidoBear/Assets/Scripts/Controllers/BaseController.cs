@@ -41,6 +41,10 @@ public class BaseController : MonoBehaviour
 
 	public delegate void AnimationFinishedDelegate();
 	public AnimationFinishedDelegate animationFinishedDelegate;
+
+	public GameObject projectile;
+	public Vector3 projectileRelativeSpawnPosition;
+	public Vector2 projectileForce;
 	
     //---------------
     // protected
@@ -235,6 +239,7 @@ public class BaseController : MonoBehaviour
 		}
 	}
 
+	//called by jump animation
 	public virtual void JumpEnded() {
 		enableControl = true;
 		currentState = ControllerState.Positioning;
