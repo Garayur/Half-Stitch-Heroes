@@ -299,8 +299,8 @@ public class BaseAIController : BaseController {
 			tV = v;
 		}
 	}
-	
-	protected bool IsInRange() {
+
+	protected virtual bool IsInRange() {
 		if(distanceToTarget < maxAttackRange)
 			return true;
 		else
