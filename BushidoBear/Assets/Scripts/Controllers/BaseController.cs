@@ -35,7 +35,7 @@ public class BaseController : MonoBehaviour
 
 	protected bool reactsToCollision = true;
 
-    public GameObject m_hitEffect = null;
+	public ParticleSystem m_hitEffect = null;
 
     public string[] damageReaction;
 
@@ -475,8 +475,17 @@ public class BaseController : MonoBehaviour
 		Flinch();
 
         //--------------------
-        // hitFX 
-        GameObject.Instantiate(m_hitEffect, hitPosition, Quaternion.identity);
+        // if particle system is present, set particle release rate, set direction and play particle system
+		if(m_hitEffect)
+		{
+			m_hitEffect.gameObject.transform.rotation = other.transform.rotation;
+			ParticleSystem.EmissionModule temp = m_hitEffect.emission;
+			ParticleSystem.MinMaxCurve tempRate = new ParticleSystem.MinMaxCurve();
+			tempRate.constantMin = amount;
+			tempRate.constantMax = amount * 3;
+			temp.rate = tempRate;
+			m_hitEffect.Play();
+		}
     }
 
 	protected virtual void Flinch(){}
