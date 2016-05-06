@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public enum ControllerActions { LIGHTATTACK, HEAVYATTACK, BLOCK, GRAB, SPECIAL, JUMP, JUMPINGLIGHTATTACK, JUMPINGHEAVYATTACK };
+public enum ControllerActions { LIGHTATTACK, HEAVYATTACK, BLOCK, GRAB, SPECIAL, JUMP, JUMPINGLIGHTATTACK, JUMPINGHEAVYATTACK, DIE };
 public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Prone, Standing, Dying, Dead, Grappled, Grappling, Thrown, Blocking, Jumping };
 public enum AttackEffect {None, Knockdown};
 
@@ -406,12 +406,25 @@ public class BaseController : MonoBehaviour
 		enableControl = true;
 		currentState = ControllerState.Positioning;
 	}
-	 
+
+	public virtual void FallDead(){
+			currentState = ControllerState.Dying;
+			animator.SetInteger("Action", 7);
+			h = 0;
+			v = 0;
+	}
 
     public virtual void EndAnimation()
     {
         animator.SetInteger("Action", 0);
     }
+
+	public virtual bool IsAlive(){
+		if (currentState == ControllerState.Dead || currentState == ControllerState.Dying)
+			return false;
+		else
+			return true;
+	}
 
     protected void EventAttack()
     {

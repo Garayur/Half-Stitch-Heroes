@@ -82,6 +82,8 @@ public class BasePlayerController : BaseController
 		case ControllerState.Prone:
 		case ControllerState.Thrown:
 		case ControllerState.Standing:
+		case ControllerState.Dying:
+		case ControllerState.Dead:
 		case ControllerState.Jumping:
 			break;
 		default:
@@ -332,5 +334,28 @@ public class BasePlayerController : BaseController
 			break;
 		}
 		
+	}
+
+	public override void FallDead(){
+		base.FallDead ();
+		animationFinishedDelegate = Dead;
+		SendControllerEvent (ControllerActions.DIE, this);
+	}
+
+	protected virtual void Dead(){
+		currentState = ControllerState.Dead;
+	}
+
+	protected override void BeginDeath(){
+		bool isAnyPlayerAlive = false;
+		FallDead ();
+		foreach(GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
+			if (player.GetComponent<BasePlayerController> ().GetState () != ControllerState.Dying && player.GetComponent<BasePlayerController> ().GetState () != ControllerState.Dead)
+				isAnyPlayerAlive = true;
+		}
+
+		if (!isAnyPlayerAlive) {
+			Debug.Log ("Game Over");
+		}
 	}
 }

@@ -23,10 +23,12 @@ public class BaseAICoordinator : MonoBehaviour {
 
 	protected virtual void OnEnable() {
 		BaseAIController.OnAIStateChange += CheckSquadAssignments;
+		BasePlayerController.OnPlayerEvent += PlayerDeath;
 	}
 
 	protected virtual void OnDisable() {
 		BaseAIController.OnAIStateChange -= CheckSquadAssignments;
+		BasePlayerController.OnPlayerEvent -=PlayerDeath;
 	}
 
 	protected virtual void OnTriggerEnter(Collider other){
@@ -71,24 +73,42 @@ public class BaseAICoordinator : MonoBehaviour {
 
 	protected virtual void AssignAttackers() { 
 		foreach(GameObject target in aiTargetAssignments.Keys) {
-			if(aiTargetAssignments[target].Count <= 0)
-				AssignAIToTarget(target);
+			if (aiTargetAssignments [target].Count <= 0 && target.GetComponent<BaseController> ().IsAlive ()) {
+				AssignAIToTarget (target);
+			}
 		}
 	}
 
 	protected virtual void ReassignAI(BaseAIController ai, GameObject target) {
 		if(target != null) {
 			aiTargetAssignments[target].Remove(ai);
-			if(aiTargetAssignments[target].Count <= 0)
+			if(aiTargetAssignments[target].Count <= 0 && target.GetComponent<BaseController>().IsAlive())
 				AssignAIToTarget(target);
 		}
 	}
 
+	protected virtual void PlayerDeath(ControllerActions action, BaseController player, List<BaseAIController> targetList) {
+		if (action == ControllerActions.DIE) {
+			ReassignAttackersFromTarget (player.gameObject);
+		}
+	}
+
+
 	protected virtual void AlertSquad(){
 	}
 
+	protected virtual void ReassignAttackersFromTarget(GameObject target)
+	{
+		foreach (BaseAIController ai in aiTargetAssignments[target]) {
+			if (ai.GetState () == ControllerState.Attacking)
+				ai.SetStateToPositioning ();
+		}
+		aiTargetAssignments [target].Clear ();
+		AssignAttackers ();
+	}
+
 	//update with new states
-	protected virtual void CheckSquadAssignments(AIStateData aiState) {
+	protected virtual void CheckSquadAssignments(ControllerStateData aiState) {
 		if(AISquad.Contains(aiState.owner)) {
 
 			switch (aiState.state) {
@@ -99,7 +119,6 @@ public class BaseAICoordinator : MonoBehaviour {
 			case ControllerState.Grappled:
 				break;
 			case ControllerState.Dead:
-				Debug.Log (AISquad.Count);
 				AISquad.Remove(aiState.owner);
 				if(AISquad.Count <= 0)
 					DestroySelfOnSquadDeath();
@@ -111,7 +130,7 @@ public class BaseAICoordinator : MonoBehaviour {
 
 		}
 	}
-
+		
 	protected IEnumerator AssignMovementVector(){
 		yield return new WaitForSeconds (movementUpdateInterval);
 		Vector3 centroid, movementVector;

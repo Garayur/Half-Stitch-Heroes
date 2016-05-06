@@ -30,7 +30,7 @@ public class BaseAIController : BaseController {
 	protected int currentComboStep = 0;
 	protected List<ComboNode> currentCombo;
 	
-	public delegate void AIStateChanged(AIStateData newState);
+	public delegate void AIStateChanged(ControllerStateData newState);
 	public static event AIStateChanged OnAIStateChange;
 	
 
@@ -178,16 +178,17 @@ public class BaseAIController : BaseController {
 
 		SendStateChangeEvent();
 	}
-	
+
+	public override void FallDead(){
+		base.FallDead ();
+		animationFinishedDelegate = Dying;
+		deadTimer = deadDuration;
+		SendStateChangeEvent();
+	}
+
 	protected override void BeginDeath() {
 		if(currentState != ControllerState.Dying || currentState != ControllerState.Dead) {
-			currentState = ControllerState.Dying;
-			animator.SetInteger("Action", 7);
-			h = 0;
-			v = 0;
-			animationFinishedDelegate = Dying;
-			deadTimer = deadDuration;
-			SendStateChangeEvent(); 
+			FallDead (); 
 		}
 	}
 
@@ -280,23 +281,24 @@ public class BaseAIController : BaseController {
 	protected virtual void ApproachTargetUntilInRange() {
 		VectorToTarget = vectorToTarget;
 		
-		if(distanceToTarget > maxAttackRange) {
+		if (distanceToTarget > maxAttackRange) {
 			h = VectorToTarget.x;
 			v = VectorToTarget.z;
 			tH = h;
 			tV = v;
-		}
-		else if(distanceToTarget < minAttackRange) {
+		} else if (distanceToTarget < minAttackRange) {
 			h = -VectorToTarget.x;
 			v = -VectorToTarget.z;
 			tH = VectorToTarget.x;
 			tV = VectorToTarget.z;
-		}
-		else if(distanceToTarget < midAttackRange) {
+		} else if (distanceToTarget < midAttackRange) {
 			h = 0;
 			v = 0;
 			tH = h;
 			tV = v;
+		} else {
+			tH = VectorToTarget.x;
+			tV = VectorToTarget.z;
 		}
 	}
 
@@ -327,7 +329,7 @@ public class BaseAIController : BaseController {
 
 	protected void SendStateChangeEvent() {
 		if(OnAIStateChange != null)
-			OnAIStateChange(new AIStateData(currentState, this, target));
+			OnAIStateChange(new ControllerStateData(currentState, this, target));
 	}
 
 	public void StartCombatPositioning(){
@@ -336,6 +338,11 @@ public class BaseAIController : BaseController {
 			isRun = false;
 			SendStateChangeEvent();
 		}
+	}
+
+	public void SetStateToPositioning(){
+		StopAllCoroutines();
+		currentState = ControllerState.Positioning;
 	}
 
 	protected override void LightAttack(int animationNumber = -1){
@@ -443,10 +450,12 @@ public class BaseAIController : BaseController {
 		float shortestDistanceToPlayer = 100;
 		float distanceToPlayer = 0;
 		foreach(GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
-			distanceToPlayer = Vector3.Distance(player.transform.position, gameObject.transform.position);
-			if(distanceToPlayer < shortestDistanceToPlayer) {
-				shortestDistanceToPlayer = distanceToPlayer;
-				target = player;
+			if(player.GetComponent<BasePlayerController>().IsAlive()){
+				distanceToPlayer = Vector3.Distance(player.transform.position, gameObject.transform.position);
+				if(distanceToPlayer < shortestDistanceToPlayer) {
+					shortestDistanceToPlayer = distanceToPlayer;
+					target = player;
+				}
 			}
 		}
 		yield return new WaitForSeconds(1.0f);
@@ -494,6 +503,7 @@ public class BaseAIController : BaseController {
 				break;
 			}
 		}
+
 	}
 
 

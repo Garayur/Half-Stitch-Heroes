@@ -15,7 +15,7 @@ public class OrthographicGroupCamera : MonoBehaviour {
 	private float yOffset = 6.0f;
 	private float xBuffer = 2.0f;
 
-	void Update () {
+	void LateUpdate () {
 		CalculateCentroid ();
 		CalculateMaxPlayerWidth ();
 		UpdateCameraSize ();
