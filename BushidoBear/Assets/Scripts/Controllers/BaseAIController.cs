@@ -35,14 +35,9 @@ public class BaseAIController : BaseController {
 	
 
 	public virtual void OnEnable() {
-		BasePlayerController.OnPlayerEvent += HandlePlayerEvent;
 		currentState = ControllerState.StartingAnimation;
 		isRun = true;
-		attackRadius = midAttackRange;
-	}
-	
-	public virtual void OnDisable() {
-		BasePlayerController.OnPlayerEvent -= HandlePlayerEvent;
+		//attackRadius = midAttackRange;
 	}
 	
 	protected override void Update () {
@@ -220,9 +215,6 @@ public class BaseAIController : BaseController {
 			tH = -1;
 			tV = 0;
 		}
-
-		//tH = VectorToTarget.x;
-	//	tV = VectorToTarget.z;
 	}
 	
 	protected virtual void Grappling(){
@@ -258,14 +250,14 @@ public class BaseAIController : BaseController {
 
 	public override bool GetGrabbed(BaseController grappler){
 		switch(currentState) {
-		case ControllerState.Dead:
-		case ControllerState.Dying:
-		case ControllerState.Prone:
 		case ControllerState.Grappling:
 			grappleTarget.BreakGrapple ();
 			BreakGrapple ();
 			BeginGrappled (grappler);
 			return true;
+		case ControllerState.Dead:
+		case ControllerState.Dying:
+		case ControllerState.Prone:
 		case ControllerState.Grappled:
 			return false;
 		case ControllerState.Flinching:
@@ -476,48 +468,31 @@ public class BaseAIController : BaseController {
 		}
 	}
 
-	protected void HandlePlayerEvent(ControllerActions action, BaseController player, List<BaseAIController> targetList){
-		if(player.gameObject == target && targetList.Contains(this)) {
+	public void HandlePlayerAction(ControllerActions action, BasePlayerController player){
+		if(player.gameObject == target) {
 
 			switch (action) {
-			case ControllerActions.BLOCK:
-				TargetBlocking();
-				break;
-			case ControllerActions.GRAB:
-				TargetGrabbing(player);
-				break;
 			case ControllerActions.HEAVYATTACK:
-				if(Vector3.Distance(gameObject.transform.position, target.transform.position) < 2)
-					TargetHeavyAttacking();
-				break;
-			case ControllerActions.JUMP:
-				TargetJumping();
+					BeingHeavyAttacked(player);
 				break;
 			case ControllerActions.LIGHTATTACK:
-				TargetLightAttacking();
+				BeingLightAttacked(player);
 				break;
 			case ControllerActions.SPECIAL:
-				TargetSpecialAttacking();
+				BeingSpecialAttacked(player);
 				break;
 			default:
 				break;
 			}
 		}
-
 	}
+		
 
+	protected virtual void BeingHeavyAttacked(BasePlayerController player){}
 
-	protected virtual void TargetBlocking(){}
+	protected virtual void BeingLightAttacked(BasePlayerController player){}
 
-	protected virtual void TargetGrabbing(BaseController player){}
-
-	protected virtual void TargetHeavyAttacking(){}
-
-	protected virtual void TargetJumping(){}
-
-	protected virtual void TargetLightAttacking(){}
-
-	protected virtual void TargetSpecialAttacking(){}
+	protected virtual void BeingSpecialAttacked(BasePlayerController player){}
 
 
 

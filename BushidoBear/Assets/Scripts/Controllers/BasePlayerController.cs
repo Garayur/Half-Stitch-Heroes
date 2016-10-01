@@ -5,10 +5,21 @@ using System.Collections.Generic;
 
 public class BasePlayerController : BaseController
 {
+
+	//Events
     public delegate void PlayerAction(ControllerActions controllerAction, BaseController player, List<BaseAIController> targetList);
     public static event PlayerAction OnPlayerEvent;
 
+	public delegate void PlayerDeath(BasePlayerController player);
+	public static event PlayerDeath OnPlayerDeathEvent;
+
+	public delegate void PlayerBlock(BasePlayerController player);
+	public static event PlayerBlock OnPlayerBlockEvent;
+
+
+
     public BasePlayerCharacterController character;
+	public int getGrip{get{return grip;}}
 	
     protected bool acceptAttackInput = true;
 	protected bool isGrabPressed =  false;
@@ -16,7 +27,6 @@ public class BasePlayerController : BaseController
     protected int gamePad;
     protected List<BaseAIController> targetList = new List<BaseAIController>();
 	protected int grip = 0;
-	public int getGrip{get{return grip;}}
 	protected int defaultPlayerGrip = 10;
 	protected int defaultNPCGrip = 5;
 	protected int maxGrip = 20;
@@ -44,15 +54,19 @@ public class BasePlayerController : BaseController
 			}
 			
 			if (Input.GetButtonDown ("Heavy Attack" + gamePad)) {
-				if(Input.GetAxisRaw("Horizontal" + gamePad) > 0){
-					tH = 1;
-					grappleTarget.transform.position = gameObject.transform.position + new Vector3(1.5f, 0, 0);
+				if (grappleTarget.CanBeThrown ()) {
+					if (Input.GetAxisRaw ("Horizontal" + gamePad) > 0) {
+						tH = 1;
+						grappleTarget.transform.position = gameObject.transform.position + new Vector3 (1.5f, 0, 0);
+					} else if (Input.GetAxisRaw ("Horizontal" + gamePad) < 0) {
+						tH = -1;
+						grappleTarget.transform.position = gameObject.transform.position + new Vector3 (-1.5f, 0, 0);
+					}
+					ThrowGrapple ();
+				} else {
+					grappleTarget.BreakGrapple();
+					BreakGrapple();
 				}
-				else if(Input.GetAxisRaw("Horizontal" + gamePad) < 0){
-					tH = -1;
-					grappleTarget.transform.position = gameObject.transform.position + new Vector3(-1.5f, 0, 0);
-				}
-				ThrowGrapple ();
 			}
 			
 			if (Input.GetButtonDown ("Defend" + gamePad)) {
@@ -84,7 +98,7 @@ public class BasePlayerController : BaseController
 		case ControllerState.Standing:
 		case ControllerState.Dying:
 		case ControllerState.Dead:
-		case ControllerState.Jumping:
+		//case ControllerState.Jumping:
 			break;
 		default:
 			h = Input.GetAxisRaw("Horizontal" + gamePad);
@@ -133,8 +147,7 @@ public class BasePlayerController : BaseController
 	{
         if (acceptAttackInput)
         {
-            PredictAttack();
-            SendControllerEvent(ControllerActions.LIGHTATTACK, this);
+			PredictAttack(ControllerActions.LIGHTATTACK);
             currentAttackInfo = character.LightAttack(isJumping);
             animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber());
         }
@@ -144,8 +157,7 @@ public class BasePlayerController : BaseController
 	{
         if (acceptAttackInput)
         {
-            PredictAttack();
-            SendControllerEvent(ControllerActions.HEAVYATTACK, this);
+			PredictAttack(ControllerActions.HEAVYATTACK);
             currentAttackInfo = character.HeavyAttack(isJumping);
             animator.SetInteger("Action", currentAttackInfo.GetAnimationNumber()); 
         }
@@ -154,7 +166,6 @@ public class BasePlayerController : BaseController
 	protected override void Grab(int animationNumber = 8){
 		base.Grab(animationNumber);
 		character.ClearComboQueue();
-		SendControllerEvent(ControllerActions.GRAB, this);
 	}
 
 	protected override void HitGrappleTarget(int animationNumber = 2) {
@@ -169,7 +180,7 @@ public class BasePlayerController : BaseController
 
 	protected override void Block(int animationNumber = 0)
 	{ 
-        SendControllerEvent(ControllerActions.BLOCK, this);
+		SendPlayerBlockEvent (this);
 		base.Block(animationNumber);
     }
 
@@ -180,14 +191,12 @@ public class BasePlayerController : BaseController
 
 	protected override void SpecialAction(int animationNumber = 0)
 	{
-        PredictAttack();
-        SendControllerEvent(ControllerActions.SPECIAL, this);
+		PredictAttack(ControllerActions.SPECIAL);
 		character.SpecialAction(isJumping);
     }
 
 	protected override void Jump(int animationNumber = 0)
-	{
-        SendControllerEvent(ControllerActions.JUMP, this);    
+	{    
         base.Jump();
     }
 
@@ -264,73 +273,58 @@ public class BasePlayerController : BaseController
 		}
 		StartCoroutine ("EscapeGrip");
 	}
-
-    protected virtual void AttackTargetList()
-    {
-        //deal damage to all in target list then clear
-        Vector3 center = transform.TransformPoint(Vector3.zero);
-
-        foreach (BaseAIController tar in targetList)
-        {
-            tar.TakeDamage(this, center, transform.forward, 1.0f, currentAttackInfo.GetAttackEffect());
-        }
-        targetList.Clear();
-    }
     
-    private void SendControllerEvent (ControllerActions action, BaseController player)
+	private void PredictAttack(ControllerActions action)
     {
-        try
-        {
-            OnPlayerEvent(action, player, targetList);
-        }
-        catch(NullReferenceException)
-        {
-            //Do nothing
-        }
+		Vector3 point1 = transform.TransformPoint (new Vector3 (0, charController.height, 0) + attackOffset) + new Vector3(0, - attackRadius, 0);
+		Vector3 point2 = transform.TransformPoint (attackOffset) + new Vector3 (0, attackRadius, 0);
+
+
+		collidersFound = Physics.OverlapCapsuleNonAlloc (point1, point2, attackRadius, attackCollisionResults, LayerMask.GetMask ("Mob"));
+		BaseAIController charControl;
+		for (int i = 0; i < collidersFound; i++) {
+			charControl = attackCollisionResults[i].GetComponent<BaseAIController>();
+			if (charControl == null)
+				continue;
+
+			if (charControl == this)
+				continue;
+
+			charControl.HandlePlayerAction (action, this);
+			charControl = null;
+		}
     }
-
-    private void PredictAttack()
-    {
-        Vector3 center = transform.TransformPoint(Vector3.zero);
-        float radius = 1.0f;
-
-        Debug.DrawRay(center, transform.forward, Color.red, 0.5f);
-
-        Collider[] cols = Physics.OverlapSphere(center, radius);
-
-
-        //------------------------
-        //Check Enemy Hit Collider
-        //------------------------
-        foreach (Collider col in cols)
-        {
-            BaseAIController charControl = col.GetComponent<BaseAIController>();
-            if (charControl == null)
-                continue;
-
-            if (charControl == this)
-                continue;
-
-            targetList.Add(charControl);
-        }
-    }
-
+		
 	public override void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount, AttackEffect effect) {
 		switch (currentState) {
 		case ControllerState.Grappling:
-			grappleTarget.BreakGrapple();
-			BreakGrapple();
-			base.TakeDamage(other, hitPosition, hitDirection, amount, AttackEffect.None);
+			grappleTarget.BreakGrapple ();
+			BreakGrapple ();
+			if (effect == AttackEffect.SumoKnockdown) {
+				if(TakeSumoKnockdown())
+					base.TakeDamage (other, hitPosition, hitDirection, amount, AttackEffect.None);
+			} else {
+				base.TakeDamage (other, hitPosition, hitDirection, amount, AttackEffect.None);
+			}
 			break;
 		case ControllerState.Blocking:
+			if (effect == AttackEffect.SumoKnockdown) {
+				if(TakeSumoKnockdown())
+					base.TakeDamage (other, hitPosition, hitDirection, amount, AttackEffect.None);
+			}
 			character.ClearComboQueue();
 			break;
 		default:
-			character.ClearComboQueue();
-			if(effect == AttackEffect.Knockdown){
-				FallProne();
+			character.ClearComboQueue ();
+			if (effect == AttackEffect.Knockdown) {
+				FallProne ();
+			} else if (effect == AttackEffect.SumoKnockdown) {
+				if (TakeSumoKnockdown ()) {
+					base.TakeDamage (other, hitPosition, hitDirection, amount, AttackEffect.None);
+				}
+			} else {
+				base.TakeDamage(other, hitPosition, hitDirection, amount, AttackEffect.None);
 			}
-			base.TakeDamage(other, hitPosition, hitDirection, amount, AttackEffect.None);
 			break;
 		}
 		
@@ -339,7 +333,7 @@ public class BasePlayerController : BaseController
 	public override void FallDead(){
 		base.FallDead ();
 		animationFinishedDelegate = Dead;
-		SendControllerEvent (ControllerActions.DIE, this);
+		SendPlayerDeathEvent (this);
 	}
 
 	protected virtual void Dead(){
@@ -356,6 +350,36 @@ public class BasePlayerController : BaseController
 
 		if (!isAnyPlayerAlive) {
 			Debug.Log ("Game Over");
+		}
+	}
+
+
+	private void SendControllerEvent (ControllerActions action, BaseController player)
+	{
+		try
+		{
+			OnPlayerEvent(action, player, targetList);
+		}
+		catch(NullReferenceException)
+		{
+			//Do nothing
+		}
+	}
+
+	private void SendPlayerDeathEvent(BasePlayerController player){
+		try{
+			OnPlayerDeathEvent(player);
+		}
+		catch(NullReferenceException){
+		}
+	}
+
+	private void SendPlayerBlockEvent(BasePlayerController player){
+		try{
+			OnPlayerBlockEvent(player);
+		}
+		catch(NullReferenceException){
+		
 		}
 	}
 }

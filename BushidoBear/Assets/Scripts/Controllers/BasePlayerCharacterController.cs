@@ -23,7 +23,7 @@ public class BasePlayerCharacterController : MonoBehaviour
 
     public virtual AttackInformation LightAttack(bool isJumping)
     {
-        if (isJumping)
+        if (!isJumping)
         {
             if(isTimer)
             {
@@ -46,7 +46,7 @@ public class BasePlayerCharacterController : MonoBehaviour
 
 	public virtual AttackInformation HeavyAttack(bool isJumping)
     {
-        if (isJumping)
+        if (!isJumping)
         {
 			if(isTimer)
 			{

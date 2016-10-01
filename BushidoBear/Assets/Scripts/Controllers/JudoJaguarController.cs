@@ -4,7 +4,7 @@ using System.Collections;
 public class JudoJaguarController : BaseAIController {
 
 
-	protected override void TargetHeavyAttacking() {
+	protected override void BeingHeavyAttacked(BasePlayerController player) {
 		if (Random.Range (0, 4) == 0) { //25% chance 
 			Block ();
 			StartCoroutine ("BlockTimer");

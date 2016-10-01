@@ -23,12 +23,12 @@ public class BaseAICoordinator : MonoBehaviour {
 
 	protected virtual void OnEnable() {
 		BaseAIController.OnAIStateChange += CheckSquadAssignments;
-		BasePlayerController.OnPlayerEvent += PlayerDeath;
+		BasePlayerController.OnPlayerDeathEvent += PlayerDeath;
 	}
 
 	protected virtual void OnDisable() {
 		BaseAIController.OnAIStateChange -= CheckSquadAssignments;
-		BasePlayerController.OnPlayerEvent -=PlayerDeath;
+		BasePlayerController.OnPlayerDeathEvent -=PlayerDeath;
 	}
 
 	protected virtual void OnTriggerEnter(Collider other){
@@ -37,9 +37,10 @@ public class BaseAICoordinator : MonoBehaviour {
 		}
 	}
 
-	protected virtual void FindPlayers() { //might need to be updated when players can die and respawn, call on player revival?
+	protected virtual void FindPlayers() {
 		foreach(GameObject player in GameObject.FindGameObjectsWithTag("Player")) {
-			aiTargetAssignments.Add(player, new List<BaseAIController>());
+			if(player.GetComponent<BasePlayerController>().IsAlive())
+				aiTargetAssignments.Add(player, new List<BaseAIController>());
 		}
 	}
 
@@ -87,10 +88,8 @@ public class BaseAICoordinator : MonoBehaviour {
 		}
 	}
 
-	protected virtual void PlayerDeath(ControllerActions action, BaseController player, List<BaseAIController> targetList) {
-		if (action == ControllerActions.DIE) {
+	protected virtual void PlayerDeath(BasePlayerController player) {
 			ReassignAttackersFromTarget (player.gameObject);
-		}
 	}
 
 

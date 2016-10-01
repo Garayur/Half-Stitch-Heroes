@@ -3,7 +3,7 @@ using System.Collections;
 
 public enum ControllerActions { LIGHTATTACK, HEAVYATTACK, BLOCK, GRAB, SPECIAL, JUMP, JUMPINGLIGHTATTACK, JUMPINGHEAVYATTACK, DIE };
 public enum ControllerState { StartingAnimation, Positioning, Attacking, Flinching, Prone, Standing, Dying, Dead, Grappled, Grappling, Thrown, Blocking, Jumping };
-public enum AttackEffect {None, Knockdown};
+public enum AttackEffect {None, Knockdown, SumoKnockdown};
 
 public class BaseController : MonoBehaviour 
 {
@@ -11,22 +11,27 @@ public class BaseController : MonoBehaviour
     // public
     //---------------
 
-    public bool enableControl = true;
+	public bool useMomentum = false;
+	public bool isJumping = false;
 
-    public float turnSpeed = 10.0f;
-    public float moveSpeed = 2.0f;
-    public float runSpeedScale = 2.0f;
-	public float standupDelay = 2.0f;
+    protected float turnSpeed = 10.0f;
+    protected float moveSpeed = 2.0f;
+    protected float runSpeedScale = 2.0f;
+	protected float jumpSpeedScale = 0.75f;
+	protected float standupDelay = 2.0f;
 
-    public Vector3 attackOffset = Vector3.zero;
+	protected Vector3 attackOffset = new Vector3(0,0, 1);
 
-    public float attackRadius = 1.5f;
+    protected float attackRadius = 0.75f;
+	protected float attackZoneOffset = 1.0f;
     public float airTime = 0.0f;
     public float health = 100f;
     public float lightAttackDamage = 5f;
     public float heavyAttackDamage = 10f;
+	public float jumpStrength = 14f;
 
 	protected Vector3 throwForce = new Vector3 (12, 15, 12);
+	protected bool canBeThrown = true;
 	protected float gravity = -9.8f;
 	protected float drag = 10.0f;
 	protected Vector3 momentum;
@@ -51,7 +56,6 @@ public class BaseController : MonoBehaviour
     //---------------
     protected Animator animator = null;
     protected bool isRun = false;
-    protected bool isJumping = false;
     protected float moveSpeedScale = 1.0f;
     protected float h, v, tH, tV;
     protected AttackInformation currentAttackInfo;
@@ -59,15 +63,19 @@ public class BaseController : MonoBehaviour
 
 	protected BaseController grappledBy;
 	protected BaseController grappleTarget;
+	protected CharacterController charController = null;
+
+	//attacking
+	protected Collider[] attackCollisionResults = new Collider[10];
+	protected int collidersFound;
 
     //---------------
     // private
     //---------------
-    private CharacterController charController = null;
 
     private Vector3 moveDirection = Vector3.zero;
     private Vector3 turnDirection = Vector3.zero;
-    private Vector3 movementVector = Vector3.zero;
+	private Vector3 movementVector = Vector3.zero;
 
     private float speed = 0;
 
@@ -86,6 +94,8 @@ public class BaseController : MonoBehaviour
 
     protected virtual void Update()
     {
+		Debug.DrawLine (charController.transform.position + charController.center, charController.transform.position + charController.center + new Vector3 (0, -(charController.height / 2 + 0.15f)),Color.red);
+
         //------------------
         //Parameters Reset
         //------------------
@@ -94,17 +104,19 @@ public class BaseController : MonoBehaviour
         //------------------
         //Update Control
         //------------------
-        if (enableControl == true) {
+		if (!useMomentum) {
+			momentum = Vector3.zero;
 			moveSpeedScale = animator.GetFloat ("SpeedScale");
 			UpdateMoveControl ();
-		} 
+		} else if (isJumping) {
+			moveSpeedScale = animator.GetFloat ("SpeedScale");
+			UpdateMoveControl ();
+		}
 
 		UpdatePhysics();
         UpdateTurning();
         UpdateMovement();
         UpdateAnimationVariables();
-
-		isJumping = charController.isGrounded;
 	}
 	
 	protected virtual void FixedUpdate()
@@ -115,7 +127,7 @@ public class BaseController : MonoBehaviour
     private void UpdateAnimationVariables()
     {
         animator.SetFloat("Speed", speed, 0.05f, Time.deltaTime);
-        animator.SetBool("Ground", charController.isGrounded);
+		animator.SetBool("Ground", IsGrounded());
         animator.SetFloat("AirTime", airTime);
     }
 
@@ -168,6 +180,9 @@ public class BaseController : MonoBehaviour
             moveDirection *= runSpeedScale;
             turnDirection *= runSpeedScale;
         }
+		if (isJumping) {
+			moveDirection *= jumpSpeedScale;
+		}
 
         speed = moveDirection.magnitude;
         if (isRun == true) speed *= runSpeedScale;
@@ -190,6 +205,7 @@ public class BaseController : MonoBehaviour
 			momentum.y = 0;
 
 		movementVector += momentum * Time.deltaTime;
+
 	}
 
 	protected virtual void ApplyGravity(){
@@ -198,7 +214,7 @@ public class BaseController : MonoBehaviour
 
 	protected virtual void UpdatePhysics(){
 		ApplyGravity ();
-		if (!enableControl)
+		if (useMomentum)
 			ApplyMomentum ();
 	}
 
@@ -228,11 +244,11 @@ public class BaseController : MonoBehaviour
 
 	protected virtual void Jump(int animationNumber = 0)
 	{
-		if (charController.isGrounded)
-		{
-			enableControl = false;
-			AddForce(new Vector3(0, 14, 0));
-			animator.SetTrigger("Jump");
+		if (IsGrounded()) {
+			useMomentum = true;
+			isJumping = true;
+			AddForce (new Vector3 (0, jumpStrength, 0));
+			animator.SetTrigger ("Jump");
 			h = 0;
 			v = 0;
 			currentState = ControllerState.Jumping;
@@ -241,7 +257,8 @@ public class BaseController : MonoBehaviour
 
 	//called by jump animation
 	public virtual void JumpEnded() {
-		enableControl = true;
+		useMomentum = false;
+		isJumping = false;
 		currentState = ControllerState.Positioning;
 	}
 
@@ -256,16 +273,15 @@ public class BaseController : MonoBehaviour
 
 
 	protected virtual void Grab(int animationNumber = 8){
-		Vector3 center = transform.TransformPoint(attackOffset);
-		float radius = attackRadius;
+		Vector3 point1 = transform.TransformPoint (new Vector3 (0, charController.height, 0) + attackOffset) + new Vector3(0, - attackRadius, 0);
+		Vector3 point2 = transform.TransformPoint (attackOffset) + new Vector3 (0, attackRadius, 0);
 
-		
-		Collider[] cols = Physics.OverlapSphere(center, radius);
+		collidersFound = Physics.OverlapCapsuleNonAlloc (point1, point2, attackRadius, attackCollisionResults, LayerMask.GetMask ("Interactable", "Mob", "Player"));
 
-		foreach (Collider col in cols)
+		for(int i = 0; i < collidersFound; i++)
 		{
-			BaseController charControl = col.GetComponent<BaseController>();
-			if (charControl == null)
+			BaseController charControl = attackCollisionResults[i].GetComponent<BaseController>();
+			if (charControl == null) 
 				continue;
 			
 			if (charControl == this)
@@ -276,6 +292,7 @@ public class BaseController : MonoBehaviour
 			}
 			break;
 		}
+
 		animator.SetInteger("Action", 8);
 
 	}
@@ -334,6 +351,10 @@ public class BaseController : MonoBehaviour
 		animator.SetInteger("Action", 0);
 	}
 
+	public bool CanBeThrown(){
+		return canBeThrown;
+	}
+
 	public virtual void ThrowGrapple(){
 		Vector3 throwVector;
 		throwVector = grappleTarget.transform.position - gameObject.transform.position;
@@ -346,7 +367,7 @@ public class BaseController : MonoBehaviour
 	
 	public virtual void GetThrown(Vector3 force, int damage) {
 		AddForce (force);
-		enableControl = false;
+		useMomentum = true;
 		charController.height = charLayingHeight;
 		animator.SetTrigger ("Thrown");
 		StartCoroutine ("BeingThrown", damage);
@@ -355,17 +376,17 @@ public class BaseController : MonoBehaviour
 
 	public virtual IEnumerator BeingThrown(int damage) {
 		yield return null;
-		if (!charController.isGrounded) {
+		if (!IsGrounded()) {
 			StartCoroutine ("BeingThrown", damage);
 		}
 		else {
-			TakeDamage( null , transform.TransformPoint(attackOffset), transform.forward, damage, AttackEffect.None);
+			TakeDamage( grappledBy , transform.TransformPoint(attackOffset), transform.forward, damage, AttackEffect.None);
 			currentState = ControllerState.Prone;
 			StartCoroutine("StandFromProne", standupDelay);
 		}
 	}
 
-	public void OnControllerColliderHit(ControllerColliderHit hit){
+	public virtual void OnControllerColliderHit(ControllerColliderHit hit){
 		if (currentState == ControllerState.Thrown) {
 			if (hit.gameObject.GetComponent<BaseController> () != null) {
 				CollideWithController (hit.gameObject.GetComponent<BaseController> ());
@@ -373,7 +394,7 @@ public class BaseController : MonoBehaviour
 		}
 	}
 
-	protected void CollideWithController(BaseController collisionTarget){
+	protected virtual void CollideWithController(BaseController collisionTarget){
 		if (collisionTarget.reactsToCollision && collisionTarget.GetState() != ControllerState.Thrown) {
 			Vector3 force;
 			force = Vector3.Normalize (collisionTarget.gameObject.transform.position - gameObject.transform.position);
@@ -402,8 +423,17 @@ public class BaseController : MonoBehaviour
 		charController.height = charStandingHeight;
 	}
 
+	public virtual bool TakeSumoKnockdown(){
+		if (!isJumping) {
+			FallProne ();	
+			return true;
+		}
+		else
+			return false;
+	}
+
 	public virtual void ResumeCombat(){
-		enableControl = true;
+		useMomentum = false;
 		currentState = ControllerState.Positioning;
 	}
 
@@ -428,34 +458,38 @@ public class BaseController : MonoBehaviour
 
     protected void EventAttack()
     {
-        Vector3 center = transform.TransformPoint(attackOffset);
-        float radius = attackRadius;
+		Vector3 center = transform.TransformPoint(charController.center);
+		Vector3 point1 = transform.TransformPoint (new Vector3 (0, charController.height, 0) + attackOffset) + new Vector3(0, - attackRadius, 0);
+		Vector3 point2 = transform.TransformPoint (attackOffset) + new Vector3 (0, attackRadius, 0);
 
 		if(currentState == ControllerState.Grappling) {
 			grappleTarget.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage(), AttackEffect.None);
 		}
 		else {
-	       // Debug.DrawRay(center, transform.forward, Color.red, 3.5f);
+			collidersFound = Physics.OverlapCapsuleNonAlloc (point1, point2, attackRadius, attackCollisionResults, LayerMask.GetMask ("Interactable", "Mob", "Player"));
+			BaseController charControl;
+			for (int i = 0; i < collidersFound; i++) {
+				charControl = attackCollisionResults[i].GetComponent<BaseController>();
+				if (charControl == null)
+					continue;
 
-	        Collider[] cols = Physics.OverlapSphere(center, radius);
+				if (charControl == this)
+					continue;
 
-
-	        //------------------------
-	        //Check Enemy Hit Collider
-	        //------------------------
-	        foreach (Collider col in cols)
-	        {
-	            BaseController charControl = col.GetComponent<BaseController>();
-	            if (charControl == null)
-	                continue;
-
-	            if (charControl == this)
-	                continue;
-
-	            charControl.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage(), currentAttackInfo.GetAttackEffect());
-	        }
+				charControl.TakeDamage(this, center, transform.forward, currentAttackInfo.GetAttackDamage(), currentAttackInfo.GetAttackEffect());
+				charControl = null;
+			}
+				
 		}
-    }
+    } 
+
+	protected void OnDrawGizmos(){
+		Gizmos.color = Color.red;
+		//Gizmos.DrawWireSphere (transform.TransformPoint (new Vector3 (0, charController.height, 0) + attackOffset) + new Vector3(0, - attackRadius, 0), attackRadius);
+		//Gizmos.DrawWireSphere (transform.TransformPoint (attackOffset) + new Vector3(0, attackRadius, 0), attackRadius);
+		//Gizmos.DrawWireSphere (transform.TransformPoint(charController.center), attackRadius);
+	}
+
 
     public virtual void TakeDamage(BaseController other, Vector3 hitPosition, Vector3 hitDirection, float amount, AttackEffect effect)
     {
@@ -500,6 +534,10 @@ public class BaseController : MonoBehaviour
 			m_hitEffect.Play();
 		}
     }
+
+	public bool IsGrounded() {
+		return Physics.Linecast (charController.transform.position + charController.center, charController.transform.position + charController.center + new Vector3 (0, -(charController.height / 2 + 0.55f), 0), LayerMask.GetMask("Floor"));
+	}
 
 	protected virtual void Flinch(){}
 

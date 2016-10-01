@@ -13,7 +13,17 @@ public class KravMagaMacawController : BaseAIController {
 		rapidStrike.Add(new ComboNode(3, 2, 5, true, AttackEffect.None, new ControllerActions[] { ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK, ControllerActions.LIGHTATTACK }));
 	}
 
-	protected override void TargetBlocking() {
+	public virtual void OnDisable() {
+		BasePlayerController.OnPlayerBlockEvent -= HandlePlayerBlockingEvent;
+	} 
+
+
+	protected void HandlePlayerBlockingEvent(BasePlayerController player){
+		if (target = player.gameObject)
+			TargetBlocking ();
+	}
+
+	protected void TargetBlocking() {
 		//grab and hold down
 		//if close enough grab
 		Grab();
